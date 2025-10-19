@@ -1,0 +1,73 @@
+{
+  "config": {
+    "abort": {
+      "no_devices_found": "No CozyLife devices were discovered in this range.",
+      "already_configured": "This CozyLife device is already configured.",
+      "all_devices_configured": "All discovered CozyLife devices are already configured.",
+      "created_multiple_entries": "Creating entries for the selected devices."
+    },
+    "step": {
+      "user": {
+        "title": "Configure CozyLife",
+        "description": "Click Submit to begin scanning your network for connected devices.\n\nHome Assistant will probe each detected subnet within the default range 192.168.0.0 - 192.168.0.255 using TCP port 5555.\n\nTick the box to specify a custom IP range instead.",
+        "data": {
+          "use_custom_range": "Use custom IP range",
+          "start_ip": "Start IP address",
+          "end_ip": "End IP address",
+          "timeout": "Connection timeout (seconds)"
+        }
+      },
+      "select_many": {
+        "title": "Select CozyLife devices",
+        "description": "Choose the discovered CozyLife devices that you would like to add to Home Assistant. You can select more than one device before continuing.",
+        "data": {
+          "targets": "Devices"
+        }
+      }
+    },
+    "error": {
+      "invalid_ip": "Enter a valid IPv4 address.",
+      "range_order": "The end IP must be greater than or equal to the start IP.",
+      "no_devices_found": "No CozyLife devices were discovered in this range.",
+      "no_networks_found": "Home Assistant could not determine which local networks to scan.",
+      "manual_range_required": "Enter a start and end IP address to run a manual scan.",
+      "device_missing": "Select a device before continuing.",
+      "already_configured": "This device is already configured.",
+      "all_devices_configured": "All discovered CozyLife devices are already configured.",
+      "invalid_timeout": "Enter a timeout between 0.05 and 10 seconds."
+    },
+    "labels": {
+      "device_type": {
+        "light": "Light",
+        "switch": "Switch",
+        "unknown": "Device"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update CozyLife device",
+        "description": "Adjust the stored connection details or update the friendly name and area.",
+        "data": {
+          "start_ip": "Start IP address",
+          "end_ip": "End IP address",
+          "ip": "Device IP address",
+          "timeout": "Connection timeout (seconds)",
+          "light_poll_interval": "Light polling interval (seconds)",
+          "switch_poll_interval": "Switch polling interval (seconds)",
+          "name": "Device name",
+          "area": "Device area"
+        }
+      }
+    },
+    "error": {
+      "invalid_ip": "Enter a valid IPv4 address.",
+      "range_order": "The end IP must be greater than or equal to the start IP.",
+      "no_devices_found": "No CozyLife devices were discovered in this range.",
+      "all_devices_configured": "All discovered CozyLife devices are already configured.",
+      "invalid_timeout": "Enter a timeout between 0.05 and 10 seconds.",
+      "invalid_poll_interval": "Enter a polling interval between 5 and 600 seconds."
+    }
+  }
+}
