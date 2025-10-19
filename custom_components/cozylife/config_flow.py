@@ -367,11 +367,15 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-        existing_ids: set[str] = set()
-        for entry in self._async_current_entries():
-            if entry.unique_id:
-                existing_ids.add(entry.unique_id)
+        current_entries = list(self._async_current_entries())
 
+        existing_ids: set[str] = {
+            entry.unique_id
+            for entry in current_entries
+            if entry.unique_id
+        }
+
+        for entry in current_entries:
             device_info = entry.data.get("device")
             if isinstance(device_info, Mapping):
                 candidate_id = device_info.get("did")
@@ -422,7 +426,7 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _async_current_entries(self) -> list[config_entries.ConfigEntry]:
         """Return currently configured entries for the integration."""
 
-        return self._async_current_entries_for_domain(DOMAIN)
+        return self.hass.config_entries.async_entries(DOMAIN)
 
     async def async_step_select_many(
         self, user_input: Mapping[str, Any] | None = None
