@@ -516,28 +516,32 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="created_multiple_entries")
 
         device = self._selected_devices[self._customise_index]
-        model_display = device.get("dmn") or device.get("did") or "CozyLife"
-        ip_display = device.get("ip") or "unknown IP"
-        name_suggest = model_display
-        name_selector = selector.TextSelector(
-            selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-        )
-        area_selector = selector.AreaSelector()
+        name_suggest = device.get("dmn") or device.get("did") or "CozyLife"
+        device_id = device.get("did") or "unknown ID"
+        ip_label = device.get("ip") or "unknown IP"
 
         schema = vol.Schema(
             {
-                vol.Optional("name", default=name_suggest): name_selector,
-                vol.Optional("area"): area_selector,
+                vol.Optional(
+                    "name", default=name_suggest
+                ): selector.TextSelector(
+                    selector.TextSelectorConfig(
+                        type=selector.TextSelectorType.TEXT
+                    )
+                ),
+                vol.Optional("area"): selector.AreaSelector(),
             }
         )
+
+        placeholders = {
+            "device": f"{name_suggest} • {device_id} • {ip_label}",
+        }
 
         if user_input is None:
             return self.async_show_form(
                 step_id="customise",
                 data_schema=schema,
-                description_placeholders={
-                    "device": f"{model_display} ({ip_display})",
-                },
+                description_placeholders=placeholders,
             )
 
         raw_name = user_input.get("name")

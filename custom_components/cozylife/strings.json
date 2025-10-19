@@ -18,18 +18,18 @@
         }
       },
       "select_many": {
-        "title": "Select CozyLife devices",
+        "title": "Select CozyLife Devices",
         "description": "Choose the discovered CozyLife devices that you would like to add to Home Assistant. You can select more than one device before continuing.",
         "data": {
           "targets": "Devices"
         }
       },
       "customise": {
-        "title": "Set name and area",
-        "description": "Customise {device}. You can leave either field empty.",
+        "title": "Set Name and Area",
+        "description": "Customise {device}.",
         "data": {
-          "name": "Device name",
-          "area": "Device area"
+          "name": "Device Name",
+          "area": "Device Area"
         }
       }
     },
