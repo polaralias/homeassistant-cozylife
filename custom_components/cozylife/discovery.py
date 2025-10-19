@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ipaddress import ip_address
 import logging
+from pathlib import Path
 
 from .const import LIGHT_TYPE_CODE, SWITCH_TYPE_CODE
 from .tcp_client import tcp_client
@@ -24,7 +25,7 @@ def _ip_range(start: str, end: str) -> list[str]:
 
 
 def discover_devices(
-    start_ip: str, end_ip: str, timeout: float = 0.3
+    start_ip: str, end_ip: str, model_path: Path, timeout: float = 0.3
 ) -> dict[str, list[dict[str, object]]]:
     """Scan an IP range for CozyLife devices."""
 
@@ -33,7 +34,7 @@ def discover_devices(
     unknown: list[dict[str, object]] = []
 
     for address in _ip_range(start_ip, end_ip):
-        client = tcp_client(address, timeout=timeout)
+        client = tcp_client(address, timeout=timeout, model_path=model_path)
 
         try:
             client._initSocket()

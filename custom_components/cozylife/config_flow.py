@@ -5,6 +5,7 @@ from __future__ import annotations
 import ipaddress
 import logging
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 import voluptuous as vol
@@ -305,12 +306,15 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ranges = await self._async_get_ranges_to_scan()
         timeout = float(self._scan_settings.get("timeout", 0.3))
         discovered: list[dict[str, Any]] = []
+        model_path = Path(
+            self.hass.config.path("custom_components", DOMAIN, "model.json")
+        )
         seen_devices: set[str] = set()
 
         for start_ip, end_ip in ranges:
             try:
                 result = await self.hass.async_add_executor_job(
-                    discover_devices, start_ip, end_ip, timeout
+                    discover_devices, start_ip, end_ip, model_path, timeout
                 )
             except Exception:  # noqa: BLE001
                 _LOGGER.exception(
@@ -492,12 +496,15 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         device = dict(import_data.get("device", {}))
         timeout = float(import_data.get("timeout", 0.3))
+        model_path = Path(
+            self.hass.config.path("custom_components", DOMAIN, "model.json")
+        )
         did = device.get("did")
         ip_address = device.get("ip")
 
         if not did and ip_address:
             def _refresh_device() -> dict[str, Any] | None:
-                client = tcp_client(ip_address, timeout=timeout)
+                client = tcp_client(ip_address, timeout=timeout, model_path=model_path)
                 try:
                     client._initSocket()
                     client._device_info()
@@ -987,6 +994,9 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
         """Handle options for legacy search-based entries."""
 
         errors: dict[str, str] = {}
+        model_path = Path(
+            self.hass.config.path("custom_components", DOMAIN, "model.json")
+        )
         timeout_selector = self._build_timeout_selector()
         ip_selector = self._build_ip_selector()
         poll_selector = self._build_poll_interval_selector()
@@ -1039,7 +1049,7 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
 
             if not errors:
                 devices = await self.hass.async_add_executor_job(
-                    discover_devices, start_ip, end_ip, timeout
+                    discover_devices, start_ip, end_ip, model_path, timeout
                 )
 
                 if not any(devices.values()):
