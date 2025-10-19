@@ -61,6 +61,9 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._available_devices: list[dict[str, Any]] = []
         self._scan_settings: dict[str, Any] = {}
         self._auto_scan_ranges: list[tuple[str, str]] = []
+        self._selected_devices: list[dict[str, Any]] = []
+        self._customise_index: int = 0
+        self._customise_results: list[dict[str, Any]] = []
 
     def _build_ip_selector(self) -> selector.TextSelector:
         """Return a text selector configured for IP input."""
@@ -437,6 +440,9 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is None or not self._available_devices:
             await self._async_discover_and_filter()
+            self._selected_devices = []
+            self._customise_index = 0
+            self._customise_results = []
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
@@ -469,38 +475,25 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             targets = user_input.get("targets") or []
-            selected: list[dict[str, Any]] = []
             available_by_id = {
                 device.get("did"): device
                 for device in self._available_devices
                 if device.get("did")
             }
 
-            for key in targets:
-                device = available_by_id.get(key)
-                if device:
-                    selected.append(device)
+            self._selected_devices = [
+                available_by_id[key]
+                for key in targets
+                if key in available_by_id
+            ]
+            self._customise_index = 0
+            self._customise_results = []
 
-            if not selected:
-                errors["base"] = "device_missing"
+            if not self._selected_devices:
+                errors["base"] = "select_at_least_one"
 
             if not errors:
-                timeout = float(self._scan_settings.get("timeout", 0.3))
-
-                for device in selected:
-                    payload = dict(device)
-                    self.hass.async_create_task(
-                        self.hass.config_entries.flow.async_init(
-                            DOMAIN,
-                            context={"source": config_entries.SOURCE_IMPORT},
-                            data={
-                                "device": payload,
-                                "timeout": timeout,
-                            },
-                        )
-                    )
-
-                return self.async_abort(reason="created_multiple_entries")
+                return await self.async_step_customise()
 
         return self.async_show_form(
             step_id="select_many",
@@ -511,6 +504,90 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_customise(
+        self, user_input: Mapping[str, Any] | None = None
+    ) -> FlowResult:
+        """Collect name and area information for each selected device."""
+
+        if not self._selected_devices:
+            return await self.async_step_select_many()
+
+        if self._customise_index >= len(self._selected_devices):
+            return self.async_abort(reason="created_multiple_entries")
+
+        device = self._selected_devices[self._customise_index]
+        model_display = device.get("dmn") or device.get("did") or "CozyLife"
+        ip_display = device.get("ip") or "unknown IP"
+        name_suggest = model_display
+        name_selector = selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
+        )
+        area_selector = selector.AreaSelector()
+
+        schema = vol.Schema(
+            {
+                vol.Optional("name", default=name_suggest): name_selector,
+                vol.Optional("area"): area_selector,
+            }
+        )
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="customise",
+                data_schema=schema,
+                description_placeholders={
+                    "device": f"{model_display} ({ip_display})",
+                },
+            )
+
+        raw_name = user_input.get("name")
+        name_value = raw_name.strip() if isinstance(raw_name, str) else None
+        if not name_value:
+            name_value = None
+
+        area_value = prepare_area_value_for_storage(
+            self.hass, user_input.get("area")
+        )
+
+        self._customise_results.append(
+            {
+                "device": device,
+                "name": name_value,
+                "area": area_value,
+            }
+        )
+        self._customise_index += 1
+
+        if self._customise_index < len(self._selected_devices):
+            return await self.async_step_customise()
+
+        timeout = float(self._scan_settings.get("timeout", 0.3))
+
+        for row in self._customise_results:
+            selected_device = row["device"]
+            payload = {
+                "device": {
+                    "ip": selected_device.get("ip"),
+                    "did": selected_device.get("did"),
+                    "pid": selected_device.get("pid"),
+                    "dpid": selected_device.get("dpid"),
+                    "dmn": selected_device.get("dmn"),
+                    "type": selected_device.get("type"),
+                },
+                "timeout": timeout,
+                CONF_NAME: row.get("name"),
+                CONF_AREA: row.get("area"),
+            }
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    data=payload,
+                )
+            )
+
+        return self.async_abort(reason="created_multiple_entries")
+
     async def async_step_import(self, import_data: Mapping[str, Any]) -> FlowResult:
         """Handle the import step for a single CozyLife device."""
 
@@ -519,6 +596,13 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             timeout = float(import_data.get("timeout", 0.3))
         except (TypeError, ValueError):
             timeout = 0.3
+
+        raw_name = import_data.get(CONF_NAME)
+        name = raw_name.strip() if isinstance(raw_name, str) else None
+        if not name:
+            name = None
+
+        area = prepare_area_value_for_storage(self.hass, import_data.get(CONF_AREA))
 
         model_path = Path(
             self.hass.config.path("custom_components", DOMAIN, "model.json")
@@ -587,16 +671,26 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(did)
         self._abort_if_unique_id_configured(
-            updates={"device": device, "timeout": timeout}
+            updates={
+                "device": device,
+                "timeout": timeout,
+                CONF_NAME: name,
+                CONF_AREA: area,
+            }
         )
 
         device.setdefault("type", "unknown")
 
-        title = device.get("dmn") or did or "CozyLife"
+        title = name or device.get("dmn") or did or "CozyLife"
 
         return self.async_create_entry(
             title=title,
-            data={"device": device, "timeout": timeout},
+            data={
+                "device": device,
+                "timeout": timeout,
+                CONF_NAME: name,
+                CONF_AREA: area,
+            },
         )
 
     @staticmethod
