@@ -318,23 +318,27 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except Exception:  # noqa: BLE001
                 _LOGGER.exception(
-                    "Error scanning CozyLife devices in range %s – %s",
-                    start_ip,
-                    end_ip,
+                    "Discovery failed for %s–%s", start_ip, end_ip
                 )
-                continue
+                result = {"lights": [], "switches": [], "unknown": []}
 
             if not isinstance(result, Mapping):
                 continue
 
             for section in ("lights", "switches", "unknown"):
-                for raw_device in result.get(section, []) or []:
-                    if not isinstance(raw_device, Mapping):
-                        continue
+                rows = result.get(section) or []
+                if not isinstance(rows, list):
+                    continue
 
-                    device = dict(raw_device)
-                    did = device.get("did")
-                    ip_address = device.get("ip")
+                filtered_rows = [
+                    dict(row)
+                    for row in rows
+                    if isinstance(row, Mapping)
+                ]
+
+                for raw_device in filtered_rows:
+                    did = raw_device.get("did")
+                    ip_address = raw_device.get("ip")
 
                     if not did or not ip_address:
                         continue
@@ -342,9 +346,10 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if did in seen_devices:
                         continue
 
+                    device = dict(raw_device)
                     seen_devices.add(did)
 
-                    if "type" not in device:
+                    if not device.get("type"):
                         if section == "lights":
                             device["type"] = "light"
                         elif section == "switches":
@@ -402,9 +407,14 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         if isinstance(candidate_id, str):
                             existing_ids.add(candidate_id)
 
-        self._available_devices = [
-            device for device in self._discovered_devices if device["did"] not in existing_ids
-        ]
+        available: list[dict[str, Any]] = []
+        for device in self._discovered_devices:
+            did = device.get("did")
+            if not did or did in existing_ids:
+                continue
+            available.append(device)
+
+        self._available_devices = available
 
         return self._available_devices
 
@@ -433,7 +443,9 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         options: list[dict[str, str]] = []
 
         for item in self._available_devices:
-            did = item["did"]
+            did = item.get("did")
+            if not did:
+                continue
             model = item.get("dmn") or did
             ip_address = item.get("ip") or "unknown IP"
             label = f"{model} ({ip_address})"
@@ -454,7 +466,11 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             targets = user_input.get("targets") or []
             selected: list[dict[str, Any]] = []
-            available_by_id = {device["did"]: device for device in self._available_devices}
+            available_by_id = {
+                device.get("did"): device
+                for device in self._available_devices
+                if device.get("did")
+            }
 
             for key in targets:
                 device = available_by_id.get(key)
@@ -495,21 +511,36 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the import step for a single CozyLife device."""
 
         device = dict(import_data.get("device", {}))
-        timeout = float(import_data.get("timeout", 0.3))
+        try:
+            timeout = float(import_data.get("timeout", 0.3))
+        except (TypeError, ValueError):
+            timeout = 0.3
+
         model_path = Path(
             self.hass.config.path("custom_components", DOMAIN, "model.json")
         )
-        did = device.get("did")
-        ip_address = device.get("ip")
 
-        if not did and ip_address:
-            def _refresh_device() -> dict[str, Any] | None:
-                client = tcp_client(ip_address, timeout=timeout, model_path=model_path)
+        did = device.get("did")
+
+        if not did:
+            ip_address = device.get("ip")
+
+            if not ip_address:
+                return self.async_abort(reason="no_devices_found")
+
+            def _probe_device() -> dict[str, Any] | None:
+                client = tcp_client(
+                    ip_address,
+                    timeout=timeout,
+                    model_path=model_path,
+                )
+
                 try:
                     client._initSocket()
                     client._device_info()
 
-                    if not getattr(client, "_device_id", None):
+                    device_id = getattr(client, "_device_id", None)
+                    if not device_id:
                         return None
 
                     type_code = getattr(client, "_device_type_code", None)
@@ -520,25 +551,35 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     else:
                         device_type = "unknown"
 
+                    dpid_value = getattr(client, "_dpid", None)
+                    if isinstance(dpid_value, list):
+                        dpid_value = list(dpid_value)
+
                     return {
-                        "did": getattr(client, "_device_id", None),
+                        "ip": ip_address or getattr(client, "_ip", None),
+                        "did": device_id,
                         "pid": getattr(client, "_pid", None),
-                        "dpid": getattr(client, "_dpid", None),
+                        "dpid": dpid_value,
                         "dmn": getattr(client, "_device_model_name", None),
                         "type": device_type,
                     }
                 finally:
                     client.disconnect()
 
-            refreshed = await self.hass.async_add_executor_job(_refresh_device)
+            try:
+                refreshed = await self.hass.async_add_executor_job(_probe_device)
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Import probe failed for CozyLife device at %s", ip_address)
+                return self.async_abort(reason="cannot_connect")
+
             if refreshed:
                 device.update(
                     {key: value for key, value in refreshed.items() if value is not None}
                 )
                 did = device.get("did")
 
-        if not did:
-            return self.async_abort(reason="no_devices_found")
+            if not did:
+                return self.async_abort(reason="no_devices_found")
 
         await self.async_set_unique_id(did)
         self._abort_if_unique_id_configured(
