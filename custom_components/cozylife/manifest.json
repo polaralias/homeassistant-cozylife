@@ -10,5 +10,7 @@
   ],
   "requirements": [],
   "iot_class": "local_polling",
+  "logo": "logo.png",
+  "icon": "icon.png",
   "version": "2025.10.18.0840"
 }

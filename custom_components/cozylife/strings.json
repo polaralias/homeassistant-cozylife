@@ -23,6 +23,14 @@
         "data": {
           "targets": "Devices"
         }
+      },
+      "customise": {
+        "title": "Set name and area",
+        "description": "Customise {device}. You can leave either field empty.",
+        "data": {
+          "name": "Device name",
+          "area": "Device area"
+        }
       }
     },
     "error": {
@@ -31,7 +39,7 @@
       "no_devices_found": "No CozyLife devices were discovered in this range.",
       "no_networks_found": "Home Assistant could not determine which local networks to scan.",
       "manual_range_required": "Enter a start and end IP address to run a manual scan.",
-      "device_missing": "Select a device before continuing.",
+      "select_at_least_one": "Select at least one device.",
       "already_configured": "This device is already configured.",
       "all_devices_configured": "All discovered CozyLife devices are already configured.",
       "invalid_timeout": "Enter a timeout between 0.05 and 10 seconds."
