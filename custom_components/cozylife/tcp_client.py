@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import socket
+import threading
 import time
 from typing import Optional, Union, Any
 from pathlib import Path
@@ -63,10 +64,11 @@ class tcp_client(object):
         self._device_model_name = None
         self._dpid = []
         self._sn = ""
+        self._socket_lock = threading.Lock()
 
     def disconnect(self):
         if self._connect:
-            try: 
+            try:
                 #self._connect.shutdown(socket.SHUT_RDWR)
                 self._connect.close()
             except:
@@ -77,6 +79,7 @@ class tcp_client(object):
         self.disconnect()
 
     def _initSocket(self):
+        self.disconnect()
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.settimeout(self.timeout)
@@ -125,11 +128,14 @@ class tcp_client(object):
                 resp = self._connect.recv(1024)
             except:
                 self.disconnect()
-                self._initSocket()
+                return None
+            if not resp:
+                self.disconnect()
                 return None
             resp_json = json.loads(resp.strip())
         except:
             _LOGGER.info('_device_info.recv.error')
+            self.disconnect()
             return None
 
         if resp_json.get('msg') is None or type(resp_json['msg']) is not dict:
@@ -225,40 +231,62 @@ class tcp_client(object):
         :param payload:
         :return:
         """
+        if not self._connect:
+            self._initSocket()
+
+        if not self._connect:
+            return None
+
         try:
             self._connect.send(self._get_package(cmd, payload))
-        except:
+        except Exception:
+            self.disconnect()
+            self._initSocket()
+
+            if not self._connect:
+                return None
+
             try:
-                self.disconnect()
-                self._initSocket()
                 self._connect.send(self._get_package(cmd, payload))
-            except:
-                pass
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.info(f'_send_receiver.send.error:{err}')
+                self.disconnect()
+                return None
+
         try:
             i = 10
             while i > 0:
                 res = self._connect.recv(1024)
-                # print(f'res={res},sn={self._sn},{self._sn in str(res)}')
                 i -= 1
-                # only allow same sn
-                if self._sn in str(res):
-                    payload = json.loads(res.strip())
-                    if payload is None or len(payload) == 0:
-                        return None
 
-                    if payload.get('msg') is None or type(payload['msg']) is not dict:
-                        return None
+                if not res:
+                    self.disconnect()
+                    return None
 
-                    if payload['msg'].get('data') is None or type(payload['msg']['data']) is not dict:
-                        return None
+                if self._sn not in str(res):
+                    continue
 
-                    return payload['msg']['data']
+                payload = json.loads(res.strip())
+                if payload is None or len(payload) == 0:
+                    self.disconnect()
+                    return None
 
+                if payload.get('msg') is None or type(payload['msg']) is not dict:
+                    self.disconnect()
+                    return None
+
+                if payload['msg'].get('data') is None or type(payload['msg']['data']) is not dict:
+                    self.disconnect()
+                    return None
+
+                return payload['msg']['data']
+
+            self.disconnect()
             return None
 
         except Exception as e:
-            # print(f'e={e}')
             _LOGGER.info(f'_only_send.recv.error:{e}')
+            self.disconnect()
             return None
 
     def _only_send(self, cmd: int, payload: dict) -> None:
@@ -292,12 +320,14 @@ class tcp_client(object):
         :param payload:
         :return:
         """
-        self._only_send(CMD_SET, payload)
-        return True
+        with self._socket_lock:
+            self._only_send(CMD_SET, payload)
+            return self._connect is not None
 
     def query(self) -> dict:
         """
         query device state
         :return:
         """
-        return self._send_receiver(CMD_QUERY, {})
+        with self._socket_lock:
+            return self._send_receiver(CMD_QUERY, {})

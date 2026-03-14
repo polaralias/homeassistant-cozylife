@@ -48,6 +48,7 @@
       "device_type": {
         "light": "Light",
         "switch": "Switch",
+        "sensor": "Sensor",
         "unknown": "Device"
       }
     }

@@ -25,13 +25,14 @@ from .const import (
     DOMAIN,
     LIGHT_TYPE_CODE,
     POLL_INTERVAL_VALIDATOR,
+    SENSOR_TYPE_CODE,
     SWITCH_TYPE_CODE,
 )
 from .helpers import (
     prepare_area_value_for_storage,
     resolve_area_id,
 )
-from .discovery import discover_devices
+from .discovery import discover_devices, discover_devices_via_broadcast
 from .tcp_client import tcp_client
 
 DEFAULT_START_IP = "192.168.0.0"
@@ -314,6 +315,25 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         seen_devices: set[str] = set()
 
+        try:
+            broadcast_result = await self.hass.async_add_executor_job(
+                discover_devices_via_broadcast,
+                model_path,
+                timeout,
+            )
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("Broadcast discovery failed: %s", err)
+            broadcast_result = {
+                "lights": [],
+                "switches": [],
+                "sensors": [],
+                "unknown": [],
+            }
+
+        discovery_results: list[Mapping[str, Any]] = []
+        if isinstance(broadcast_result, Mapping):
+            discovery_results.append(broadcast_result)
+
         for start_ip, end_ip in ranges:
             try:
                 result = await self.hass.async_add_executor_job(
@@ -323,12 +343,20 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception(
                     "Discovery failed for %s–%s", start_ip, end_ip
                 )
-                result = {"lights": [], "switches": [], "unknown": []}
+                result = {
+                    "lights": [],
+                    "switches": [],
+                    "sensors": [],
+                    "unknown": [],
+                }
 
             if not isinstance(result, Mapping):
                 continue
 
-            for section in ("lights", "switches", "unknown"):
+            discovery_results.append(result)
+
+        for result in discovery_results:
+            for section in ("lights", "switches", "sensors", "unknown"):
                 rows = result.get(section) or []
                 if not isinstance(rows, list):
                     continue
@@ -357,6 +385,8 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             device["type"] = "light"
                         elif section == "switches":
                             device["type"] = "switch"
+                        elif section == "sensors":
+                            device["type"] = "sensor"
                         else:
                             device["type"] = "unknown"
 
@@ -640,6 +670,8 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         device_type = "light"
                     elif type_code == SWITCH_TYPE_CODE:
                         device_type = "switch"
+                    elif type_code == SENSOR_TYPE_CODE:
+                        device_type = "sensor"
                     else:
                         device_type = "unknown"
 

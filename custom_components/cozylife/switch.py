@@ -132,6 +132,7 @@ async def async_setup_entry(
     async def async_update(now=None):
         for switch in switches:
             await hass.async_add_executor_job(switch._refresh_state)
+            switch.async_write_ha_state()
             await asyncio.sleep(0.01)
 
     remove_update = async_track_time_interval(hass, async_update, scan_interval)
@@ -211,7 +212,7 @@ class CozyLifeSwitch(SwitchEntity):
         self._state = self._tcp_client.query()
         _LOGGER.info(f'_name={self._name},_state={self._state}')
         if self._state:
-            self._attr_is_on = 0 < self._state['1']
+            self._attr_is_on = 0 < int(self._state.get('1', 0))
             self._attr_available = True
         else:
             self._attr_available = False
@@ -237,6 +238,7 @@ class CozyLifeSwitch(SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self._attr_is_on = True
+        self.async_write_ha_state()
 
         _LOGGER.info(f'turn_on:{kwargs}')
 
@@ -249,6 +251,7 @@ class CozyLifeSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self._attr_is_on = False
+        self.async_write_ha_state()
 
         _LOGGER.info('turn_off')
 

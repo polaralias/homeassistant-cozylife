@@ -226,11 +226,13 @@ async def async_setup_entry(
                 await hass.async_add_executor_job(light._refresh_state)
             else:
                 await hass.async_add_executor_job(light._refresh_state)
+            light.async_write_ha_state()
             await asyncio.sleep(0.1)
 
     async def async_update_switches(now=None):
         for light in switches:
             await hass.async_add_executor_job(light._refresh_state)
+            light.async_write_ha_state()
             await asyncio.sleep(0.1)
 
     remove_light_update = async_track_time_interval(
@@ -348,7 +350,7 @@ class CozyLifeSwitchAsLight(LightEntity):
         self._state = self._tcp_client.query()
         _LOGGER.info(f'_name={self._name},_state={self._state}')
         if self._state:
-            self._attr_is_on = 0 < self._state['1']
+            self._attr_is_on = 0 < int(self._state.get('1', 0))
             self._attr_available = True
         else:
             self._attr_available = False
@@ -374,6 +376,7 @@ class CozyLifeSwitchAsLight(LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self._attr_is_on = True
+        self.async_write_ha_state()
 
         _LOGGER.info(f'turn_on:{kwargs}')
 
@@ -386,6 +389,7 @@ class CozyLifeSwitchAsLight(LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self._attr_is_on = False
+        self.async_write_ha_state()
 
         _LOGGER.info('turn_off')
 
@@ -405,8 +409,7 @@ class CozyLifeLight(CozyLifeSwitchAsLight,RestoreEntity):
 
     _tcp_client = None
 
-    _attr_supported_color_modes = {
-        COLOR_MODE_ONOFF}
+    _attr_supported_color_modes = frozenset({COLOR_MODE_ONOFF})
     _attr_color_mode = COLOR_MODE_BRIGHTNESS
 
     def __init__(
@@ -432,6 +435,8 @@ class CozyLifeLight(CozyLifeSwitchAsLight,RestoreEntity):
         self._cl = None
         self._max_brightness = 255
         self._min_brightness = 1
+        self._attr_supported_color_modes = {COLOR_MODE_ONOFF}
+        self._attr_color_mode = COLOR_MODE_BRIGHTNESS
         #self._name = tcp_client._device_model_name
         _LOGGER.info(f'before:{self._unique_id}._attr_color_mode={self._attr_color_mode}._attr_supported_color_modes='
                      f'{self._attr_supported_color_modes}.dpid={tcp_client.dpid}')
@@ -448,7 +453,8 @@ class CozyLifeLight(CozyLifeSwitchAsLight,RestoreEntity):
         self._attr_brightness = 0
 
         # h s
-        if not 'switch' in self._tcp_client._device_model_name.lower():
+        model_name = (self._tcp_client._device_model_name or "").lower()
+        if "switch" not in model_name:
 
             if 3 in tcp_client.dpid:
                 self._attr_color_mode = COLOR_MODE_COLOR_TEMP
@@ -496,7 +502,7 @@ class CozyLifeLight(CozyLifeSwitchAsLight,RestoreEntity):
         self._state = self._tcp_client.query()
         _LOGGER.info(f'_name={self._name},_state={self._state}')
         if self._state:
-            self._attr_is_on = 0 < self._state['1']
+            self._attr_is_on = 0 < int(self._state.get('1', 0))
             self._attr_available = True
 
             if '2' in self._state:
@@ -836,17 +842,7 @@ class CozyLifeLight(CozyLifeSwitchAsLight,RestoreEntity):
 
     def get_supported_features(self) -> int:
         """Flag supported features."""
-        features = 0
-        features = features | SUPPORT_EFFECT | SUPPORT_TRANSITION
-        try:
-            # Map features for better reading
-            if COLOR_MODE_BRIGHTNESS in self._attr_supported_color_modes:
-                features = features | SUPPORT_BRIGHTNESS
-            if COLOR_MODE_HS in self._attr_supported_color_modes:
-                features = features | SUPPORT_COLOR
-            if COLOR_MODE_COLOR_TEMP in self._attr_supported_color_modes:
-                features = features | SUPPORT_COLOR_TEMP
-        except:
-            pass
-        # fallback
+        features = SUPPORT_EFFECT | SUPPORT_TRANSITION
+        if COLOR_MODE_BRIGHTNESS in self._attr_supported_color_modes:
+            features = features | SUPPORT_BRIGHTNESS
         return features
