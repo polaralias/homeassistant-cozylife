@@ -1,8 +1,8 @@
 {
   "domain": "cozylife",
   "name": "CozyLife",
-  "documentation": "https://github.com/Polaralias/hass-cozylife",
-  "issue_tracker": "https://github.com/Polaralias/hass-cozylife/issues",
+  "documentation": "https://github.com/polaralias/homeassistant-cozylife",
+  "issue_tracker": "https://github.com/polaralias/homeassistant-cozylife/issues",
   "config_flow": true,
   "dependencies": [],
   "codeowners": [
@@ -10,7 +10,5 @@
   ],
   "requirements": [],
   "iot_class": "local_polling",
-  "logo": "logo.png",
-  "icon": "icon.png",
-  "version": "2025.10.18.0840"
+  "version": "2026.03.14.1904"
 }
