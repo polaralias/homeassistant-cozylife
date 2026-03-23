@@ -7,9 +7,9 @@ from typing import Optional, Union, Any
 from pathlib import Path
 import logging
 try:
-  from .utils import get_pid_list, get_sn
-except:
-  from utils import get_pid_list, get_sn
+    from .utils import get_pid_list, get_sn
+except Exception:
+    from utils import get_pid_list, get_sn
 
 CMD_INFO = 0
 CMD_QUERY = 2
@@ -17,35 +17,31 @@ CMD_SET = 3
 CMD_LIST = [CMD_INFO, CMD_QUERY, CMD_SET]
 _LOGGER = logging.getLogger(__name__)
 
+# Maximale Anzahl Reconnect-Versuche pro Aufruf
+_MAX_RETRIES = 2
+
 
 class tcp_client(object):
     """
-    Represents a device
-    send:{"cmd":0,"pv":0,"sn":"1636463553873","msg":{}}
-    receiver:{"cmd":0,"pv":0,"sn":"1636463553873","msg":{"did":"629168597cb94c4c1d8f","dtp":"02","pid":"e2s64v",
-    "mac":"7cb94c4c1d8f","ip":"192.168.123.57","rssi":-33,"sv":"1.0.0","hv":"0.0.1"},"res":0}
+    Represents a CozyLife device accessed via TCP on port 5555.
 
-    send:{"cmd":2,"pv":0,"sn":"1636463611798","msg":{"attr":[0]}}
-    receiver:{"cmd":2,"pv":0,"sn":"1636463611798","msg":{"attr":[1,2,3,4,5,6],"data":{"1":0,"2":0,"3":1000,"4":1000,
-    "5":65535,"6":65535}},"res":0}
-
-    send:{"cmd":3,"pv":0,"sn":"1636463662455","msg":{"attr":[1],"data":{"1":0}}}
-    receiver:{"cmd":3,"pv":0,"sn":"1636463662455","msg":{"attr":[1],"data":{"1":0}},"res":0}
-    receiver:{"cmd":10,"pv":0,"sn":"1636463664000","res":0,"msg":{"attr":[1,2,3,4,5,6],"data":{"1":0,"2":0,"3":1000,
-    "4":1000,"5":65535,"6":65535}}}
+    Connection strategy: connect → send → recv → disconnect per call.
+    CozyLife devices drop idle TCP connections after ~30–60 s, so keeping a
+    persistent socket open is unreliable. Opening a fresh socket for every
+    query/control call is cheap (sub-millisecond on LAN) and avoids the
+    "unavailable after idle" problem entirely.
     """
+
     _ip = str
     _port = 5555
     _connect = None  # socket
 
-    _device_id = str  # str
-    # _device_key = str
+    _device_id = str
     _pid = str
     _device_type_code = str
     _icon = str
     _device_model_name = str
     _dpid = []
-    # last sn
     _sn = str
     _model_path: Optional[Path] = None
 
@@ -54,8 +50,6 @@ class tcp_client(object):
         self.timeout = timeout
         self._model_path = model_path
 
-        # Ensure all instance attributes are initialised so attribute access
-        # after unsuccessful device info lookups does not raise AttributeError.
         self._connect = None
         self._device_id = None
         self._pid = None
@@ -66,35 +60,42 @@ class tcp_client(object):
         self._sn = ""
         self._socket_lock = threading.Lock()
 
+    # ------------------------------------------------------------------
+    # Connection helpers
+    # ------------------------------------------------------------------
+
     def disconnect(self):
+        """Close the socket if open."""
         if self._connect:
             try:
-                #self._connect.shutdown(socket.SHUT_RDWR)
                 self._connect.close()
-            except:
+            except Exception:
                 pass
         self._connect = None
 
     def __del__(self):
         self.disconnect()
 
-    def _initSocket(self):
+    def _initSocket(self) -> bool:
+        """Open a fresh TCP connection. Returns True on success."""
         self.disconnect()
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.settimeout(self.timeout)
             s.connect((self._ip, self._port))
             self._connect = s
-        except:
-            _LOGGER.info(f'_initSocketerror,ip={self._ip}')
+            return True
+        except Exception:
+            _LOGGER.debug(f'_initSocket failed, ip={self._ip}')
             self.disconnect()
+            return False
+
+    # ------------------------------------------------------------------
+    # Properties
+    # ------------------------------------------------------------------
 
     @property
     def check(self) -> bool:
-        """
-        Determine whether the device is filtered
-        :return:
-        """
         return True
 
     @property
@@ -117,185 +118,158 @@ class tcp_client(object):
     def device_id(self):
         return self._device_id
 
+    # ------------------------------------------------------------------
+    # Device info (called once during setup)
+    # ------------------------------------------------------------------
+
     def _device_info(self) -> None:
-        """
-        get info for device model
-        :return:
-        """
+        """Fetch device metadata and populate instance attributes."""
         self._only_send(CMD_INFO, {})
         try:
             try:
                 resp = self._connect.recv(1024)
-            except:
+            except Exception:
                 self.disconnect()
                 return None
             if not resp:
                 self.disconnect()
                 return None
             resp_json = json.loads(resp.strip())
-        except:
-            _LOGGER.info('_device_info.recv.error')
+        except Exception:
+            _LOGGER.debug('_device_info recv error')
             self.disconnect()
             return None
 
-        if resp_json.get('msg') is None or type(resp_json['msg']) is not dict:
-            _LOGGER.info('_device_info.recv.error1')
-
+        msg = resp_json.get('msg')
+        if not isinstance(msg, dict):
+            return None
+        if msg.get('did') is None or msg.get('pid') is None:
             return None
 
-        if resp_json['msg'].get('did') is None:
-            _LOGGER.info('_device_info.recv.error2')
-
-            return None
-        self._device_id = resp_json['msg']['did']
-
-        if resp_json['msg'].get('pid') is None:
-            _LOGGER.info('_device_info.recv.error3')
-            return None
-
-        self._pid = resp_json['msg']['pid']
+        self._device_id = msg['did']
+        self._pid = msg['pid']
 
         if not self._model_path:
-            _LOGGER.error(
-                "Model path not provided to tcp_client, cannot look up device PID."
-            )
+            _LOGGER.error("Model path not provided to tcp_client.")
             return
 
         pid_list = get_pid_list(self._model_path)
         for item in pid_list:
-            match = False
             for item1 in item['device_model']:
                 if item1['device_product_id'] == self._pid:
-                    match = True
                     self._icon = item1.get('icon')
                     self._device_model_name = item1.get('device_model_name')
                     self._dpid = item1.get('dpid', [])
+                    self._device_type_code = item['device_type_code']
                     break
-
-            if match:
-                self._device_type_code = item['device_type_code']
+            if self._device_type_code:
                 break
 
-        # _LOGGER.info(pid_list)
-        _LOGGER.info(self._device_id)
-        _LOGGER.info(self._device_type_code)
-        _LOGGER.info(self._pid)
-        _LOGGER.info(self._device_model_name)
-        _LOGGER.info(self._icon)
+        _LOGGER.info(
+            f'device_info: did={self._device_id} pid={self._pid} '
+            f'model={self._device_model_name} dpid={self._dpid}'
+        )
+
+    # ------------------------------------------------------------------
+    # Packet builder
+    # ------------------------------------------------------------------
 
     def _get_package(self, cmd: int, payload: dict) -> bytes:
-        """
-        package message
-        :param cmd:int:
-        :param payload:
-        :return:
-        """
         self._sn = get_sn()
-        if CMD_SET == cmd:
+        if cmd == CMD_SET:
             message = {
-                'pv': 0,
-                'cmd': cmd,
-                'sn': self._sn,
+                'pv': 0, 'cmd': cmd, 'sn': self._sn,
                 'msg': {
-                    'attr': [int(item) for item in payload.keys()],
+                    'attr': [int(k) for k in payload.keys()],
                     'data': payload,
-                }
+                },
             }
-        elif CMD_QUERY == cmd:
+        elif cmd == CMD_QUERY:
             message = {
-                'pv': 0,
-                'cmd': cmd,
-                'sn': self._sn,
-                'msg': {
-                    'attr': [0],
-                }
+                'pv': 0, 'cmd': cmd, 'sn': self._sn,
+                'msg': {'attr': [0]},
             }
-        elif CMD_INFO == cmd:
+        elif cmd == CMD_INFO:
             message = {
-                'pv': 0,
-                'cmd': cmd,
-                'sn': self._sn,
-                'msg': {}
+                'pv': 0, 'cmd': cmd, 'sn': self._sn,
+                'msg': {},
             }
         else:
-            raise Exception('CMD is not valid')
+            raise ValueError(f'Invalid CMD: {cmd}')
 
-        payload_str = json.dumps(message, separators=(',', ':',))
-        _LOGGER.info(f'_package={payload_str}')
+        payload_str = json.dumps(message, separators=(',', ':'))
+        _LOGGER.debug(f'_package={payload_str}')
         return bytes(payload_str + "\r\n", encoding='utf8')
 
-    def _send_receiver(self, cmd: int, payload: dict) -> Union[dict, Any]:
+    # ------------------------------------------------------------------
+    # Core send/receive  (stateless: connect → send → recv → disconnect)
+    # ------------------------------------------------------------------
+
+    def _send_receiver(self, cmd: int, payload: dict) -> Union[dict, None]:
         """
-        send & receiver
-        :param cmd:
-        :param payload:
-        :return:
+        Connect, send a command, receive the matching response, disconnect.
+
+        Retries up to _MAX_RETRIES times on socket errors so transient
+        network glitches don't immediately mark the device unavailable.
         """
-        if not self._connect:
-            self._initSocket()
-
-        if not self._connect:
-            return None
-
-        try:
-            self._connect.send(self._get_package(cmd, payload))
-        except Exception:
-            self.disconnect()
-            self._initSocket()
-
-            if not self._connect:
-                return None
+        for attempt in range(_MAX_RETRIES):
+            # Always open a fresh connection
+            if not self._initSocket():
+                _LOGGER.debug(
+                    f'_send_receiver: connect failed (attempt {attempt + 1}), '
+                    f'ip={self._ip}'
+                )
+                if attempt < _MAX_RETRIES - 1:
+                    time.sleep(0.2)
+                continue
 
             try:
                 self._connect.send(self._get_package(cmd, payload))
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.info(f'_send_receiver.send.error:{err}')
+            except Exception as err:
+                _LOGGER.debug(f'_send_receiver send error: {err}')
                 self.disconnect()
-                return None
+                if attempt < _MAX_RETRIES - 1:
+                    time.sleep(0.2)
+                continue
 
-        try:
-            i = 10
-            while i > 0:
-                res = self._connect.recv(1024)
-                i -= 1
+            try:
+                result = None
+                for _ in range(10):
+                    res = self._connect.recv(1024)
+                    if not res:
+                        break
+                    if self._sn not in str(res):
+                        continue
+                    parsed = json.loads(res.strip())
+                    if not isinstance(parsed, dict):
+                        break
+                    msg = parsed.get('msg')
+                    if not isinstance(msg, dict):
+                        break
+                    data = msg.get('data')
+                    if not isinstance(data, dict):
+                        break
+                    result = data
+                    break
 
-                if not res:
-                    self.disconnect()
-                    return None
+                return result
 
-                if self._sn not in str(res):
-                    continue
+            except Exception as err:
+                _LOGGER.debug(f'_send_receiver recv error: {err}')
+                if attempt < _MAX_RETRIES - 1:
+                    time.sleep(0.2)
+            finally:
+                # WICHTIGSTE ÄNDERUNG: Verbindung nach jedem Aufruf schließen.
+                # CozyLife-Geräte trennen idle-Verbindungen nach ~30–60 s.
+                # Stateless-Betrieb (connect-per-call) ist stabiler als eine
+                # dauerhaft offene Verbindung.
+                self.disconnect()
 
-                payload = json.loads(res.strip())
-                if payload is None or len(payload) == 0:
-                    self.disconnect()
-                    return None
-
-                if payload.get('msg') is None or type(payload['msg']) is not dict:
-                    self.disconnect()
-                    return None
-
-                if payload['msg'].get('data') is None or type(payload['msg']['data']) is not dict:
-                    self.disconnect()
-                    return None
-
-                return payload['msg']['data']
-
-            self.disconnect()
-            return None
-
-        except Exception as e:
-            _LOGGER.info(f'_only_send.recv.error:{e}')
-            self.disconnect()
-            return None
+        _LOGGER.debug(f'_send_receiver: all {_MAX_RETRIES} attempts failed, ip={self._ip}')
+        return None
 
     def _only_send(self, cmd: int, payload: dict) -> None:
-        """
-        send but not receiver
-        :param cmd:
-        :param payload:
-        :return:
-        """
+        """Send a command without waiting for a response (used for CMD_INFO setup)."""
         if not self._connect:
             self._initSocket()
 
@@ -304,30 +278,29 @@ class tcp_client(object):
 
         try:
             self._connect.send(self._get_package(cmd, payload))
-        except Exception:  # noqa: BLE001
+        except Exception:
             try:
                 self.disconnect()
                 self._initSocket()
-
                 if self._connect:
                     self._connect.send(self._get_package(cmd, payload))
-            except Exception:  # noqa: BLE001
+            except Exception:
                 self.disconnect()
 
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
     def control(self, payload: dict) -> bool:
-        """
-        control use dpid
-        :param payload:
-        :return:
-        """
+        """Send a control command. Returns True if the device was reachable."""
         with self._socket_lock:
             self._only_send(CMD_SET, payload)
-            return self._connect is not None
+            # Verbindung nach control() sofort schließen
+            reachable = self._connect is not None
+            self.disconnect()
+            return reachable
 
-    def query(self) -> dict:
-        """
-        query device state
-        :return:
-        """
+    def query(self) -> Optional[dict]:
+        """Query the current device state. Returns a data dict or None."""
         with self._socket_lock:
             return self._send_receiver(CMD_QUERY, {})
