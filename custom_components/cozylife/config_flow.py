@@ -67,15 +67,11 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._customise_results: list[dict[str, Any]] = []
 
     def _build_ip_selector(self) -> selector.TextSelector:
-        """Return a text selector configured for IP input."""
-
         return selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
         )
 
     def _build_timeout_selector(self) -> selector.NumberSelector:
-        """Return a number selector for timeouts."""
-
         return selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0.05,
@@ -86,8 +82,6 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_get_auto_scan_ranges(self) -> list[tuple[str, str]]:
-        """Return the automatically detected scan ranges for the host network."""
-
         if self._auto_scan_ranges:
             return self._auto_scan_ranges
 
@@ -121,7 +115,6 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     continue
 
                 network_details = interface.network
-
                 start = str(network_details.network_address)
                 end = str(network_details.broadcast_address)
 
@@ -137,8 +130,6 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the initial step initiated by the user."""
-
         errors: dict[str, str] = {}
 
         if user_input is None:
@@ -175,8 +166,6 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             and user_input is not None
             and (user_input.get("start_ip") or user_input.get("end_ip"))
         ):
-            # Treat manual IP input as opting into custom mode even if the
-            # toggle was not explicitly enabled.
             use_custom_range = True
 
         show_manual_fields = use_custom_range
@@ -225,7 +214,6 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "ranges": ranges_to_scan,
                     "timeout": timeout,
                 }
-
                 return await self.async_step_select_many()
 
         description_default_start = (
@@ -271,8 +259,6 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         suggested_timeout: float,
         use_custom_range: bool,
     ) -> vol.Schema:
-        """Construct the dynamic schema for the user step."""
-
         schema_fields: dict[Any, Any] = {
             vol.Required("use_custom_range", default=use_custom_range): selector.BooleanSelector(),
         }
@@ -292,8 +278,6 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return vol.Schema(schema_fields)
 
     async def _async_get_ranges_to_scan(self) -> list[tuple[str, str]]:
-        """Return the IP ranges to scan based on stored settings."""
-
         ranges = self._scan_settings.get("ranges")
         if ranges:
             return ranges
@@ -305,8 +289,6 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return [(DEFAULT_START_IP, DEFAULT_END_IP)]
 
     async def _async_discover_and_filter(self) -> list[dict[str, Any]]:
-        """Discover devices and filter out those already configured."""
-
         ranges = await self._async_get_ranges_to_scan()
         timeout = float(self._scan_settings.get("timeout", 0.3))
         discovered: list[dict[str, Any]] = []
@@ -457,15 +439,11 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_current_entries(self) -> list[config_entries.ConfigEntry]:
-        """Return currently configured entries for the integration."""
-
         return self.hass.config_entries.async_entries(DOMAIN)
 
     async def async_step_select_many(
         self, user_input: Mapping[str, Any] | None = None
     ) -> FlowResult:
-        """Allow the user to select multiple devices to import."""
-
         errors: dict[str, str] = {}
 
         if user_input is None or not self._available_devices:
@@ -537,8 +515,6 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_customise(
         self, user_input: Mapping[str, Any] | None = None
     ) -> FlowResult:
-        """Collect name and area information for each selected device."""
-
         if not self._selected_devices:
             return await self.async_step_select_many()
 
@@ -623,8 +599,6 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="created_multiple_entries")
 
     async def async_step_import(self, import_data: Mapping[str, Any]) -> FlowResult:
-        """Handle the import step for a single CozyLife device."""
-
         device = dict(import_data.get("device", {}))
         try:
             timeout = float(import_data.get("timeout", 0.3))
@@ -732,16 +706,17 @@ class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> config_entries.OptionsFlow:
-        """Return the options flow handler."""
-
         return CozyLifeOptionsFlow(config_entry)
 
 
 class CozyLifeOptionsFlow(config_entries.OptionsFlow):
     """Handle options for the CozyLife integration."""
 
+    # FIX: In HA 2025.x+ darf config_entry NICHT mehr manuell im __init__
+    # gesetzt werden – HA stellt es automatisch als self.config_entry bereit.
+    # Der __init__ nimmt den Parameter noch entgegen (für Kompatibilität mit
+    # async_get_options_flow), speichert ihn aber nicht mehr selbst.
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self.config_entry = config_entry
         self._multi_devices: list[dict[str, Any]] = []
         self._multi_results: list[dict[str, Any]] = []
         self._multi_index: int = 0
@@ -768,19 +743,16 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
             )
         except vol.Invalid:
             self._switch_poll_interval = float(DEFAULT_SWITCH_POLL_INTERVAL)
+
         self._multi_light_poll_interval: float = self._light_poll_interval
         self._multi_switch_poll_interval: float = self._switch_poll_interval
 
     def _build_ip_selector(self) -> selector.TextSelector:
-        """Return a text selector configured for IP input."""
-
         return selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
         )
 
     def _build_timeout_selector(self) -> selector.NumberSelector:
-        """Return a number selector for timeouts."""
-
         return selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0.05,
@@ -791,8 +763,6 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
         )
 
     def _build_poll_interval_selector(self) -> selector.NumberSelector:
-        """Return a number selector for polling intervals."""
-
         return selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=5,
@@ -805,8 +775,6 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
     def _update_runtime_poll_intervals(
         self, light_interval: float, switch_interval: float
     ) -> None:
-        """Update cached poll intervals and cancel existing timers."""
-
         domain_data = self.hass.data.get(DOMAIN, {})
         entry_data = domain_data.get(self.config_entry.entry_id)
 
@@ -836,8 +804,6 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: Mapping[str, Any] | None = None
     ) -> FlowResult:
-        """Manage the options for the integration."""
-
         errors: dict[str, str] = {}
 
         data = self.config_entry.data
@@ -979,8 +945,6 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
     async def _async_step_multi(
         self, user_input: Mapping[str, Any] | None
     ) -> FlowResult:
-        """Handle options updates for multi-device entries."""
-
         errors: dict[str, str] = {}
 
         if not self._multi_initialized:
@@ -1166,8 +1130,6 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
     async def _async_step_legacy(
         self, user_input: Mapping[str, Any] | None
     ) -> FlowResult:
-        """Handle options for legacy search-based entries."""
-
         errors: dict[str, str] = {}
         model_path = Path(
             self.hass.config.path("custom_components", DOMAIN, "model.json")
