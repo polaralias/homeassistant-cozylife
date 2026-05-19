@@ -261,11 +261,11 @@ async def test_brightness_transition_in_white_mode_does_not_require_color_temp_t
 @pytest.mark.asyncio
 @pytest.mark.cozylife
 async def test_color_temp_transition_keeps_existing_brightness() -> None:
-    """Color-temperature transitions should not require a brightness payload."""
+    """Kelvin color-temperature transitions should not require brightness input."""
 
     entity, client = _build_light_entity({"1": 1, "2": 0, "3": 500, "4": 251})
 
-    await entity.async_turn_on(color_temp=entity.max_mireds, transition=0.1)
+    await entity.async_turn_on(color_temp_kelvin=2700, transition=0.1)
 
     state = client.query()
     assert state["3"] == 0
@@ -304,13 +304,37 @@ async def test_kelvin_color_temp_turn_on_maps_to_device_payload() -> None:
 
 @pytest.mark.cozylife
 def test_kelvin_properties_are_exposed_for_newer_home_assistant() -> None:
-    """Entity should expose Kelvin properties alongside mired-based ones."""
+    """Entity should expose Kelvin properties for Home Assistant light state."""
 
     entity, _ = _build_light_entity({"1": 1, "2": 0, "3": 500, "4": 251})
 
     assert entity.color_temp_kelvin is not None
     assert entity.min_color_temp_kelvin == 2700
     assert entity.max_color_temp_kelvin == 6500
+
+
+@pytest.mark.asyncio
+@pytest.mark.cozylife
+async def test_manual_controls_normalize_effect_to_effect_off() -> None:
+    """Direct light controls should surface the standard HA no-effect marker."""
+
+    entity, _ = _build_light_entity({"1": 1, "2": 0, "3": 500, "4": 251})
+
+    await entity.async_turn_on(brightness=128)
+
+    assert entity.effect == light_platform.EFFECT_OFF
+
+
+@pytest.mark.asyncio
+@pytest.mark.cozylife
+async def test_manual_effect_alias_maps_to_effect_off() -> None:
+    """Legacy manual effect requests should normalize to HA's EFFECT_OFF."""
+
+    entity, _ = _build_light_entity({"1": 1, "2": 0, "3": 500, "4": 251})
+
+    await entity.async_set_effect("manual")
+
+    assert entity.effect == light_platform.EFFECT_OFF
 
 
 @pytest.mark.asyncio

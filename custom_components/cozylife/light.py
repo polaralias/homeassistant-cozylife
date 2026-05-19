@@ -29,11 +29,12 @@ from .helpers import normalize_area_value, resolve_area_id
 from .tcp_client import tcp_client
 
 ATTR_BRIGHTNESS = light_platform.ATTR_BRIGHTNESS
-ATTR_COLOR_TEMP = light_platform.ATTR_COLOR_TEMP
 ATTR_EFFECT = light_platform.ATTR_EFFECT
 ATTR_HS_COLOR = light_platform.ATTR_HS_COLOR
 ATTR_TRANSITION = light_platform.ATTR_TRANSITION
 ATTR_COLOR_TEMP_KELVIN = getattr(light_platform, "ATTR_COLOR_TEMP_KELVIN", None)
+ATTR_COLOR_TEMP = getattr(light_platform, "ATTR_COLOR_TEMP", None)
+EFFECT_OFF = getattr(light_platform, "EFFECT_OFF", "off")
 
 COLOR_MODE_BRIGHTNESS = light_platform.COLOR_MODE_BRIGHTNESS
 COLOR_MODE_COLOR_TEMP = light_platform.COLOR_MODE_COLOR_TEMP
@@ -64,11 +65,12 @@ MIN_INTERVAL = 0.2
 SERVICE_SET_EFFECT = "set_effect"
 SERVICE_SET_ALL_EFFECT = "set_all_effect"
 SCENES = ["manual", "natural", "sleep", "warm", "study", "chrismas"]
+EFFECTS = [EFFECT_OFF, "natural", "sleep", "warm", "study", "chrismas"]
 SERVICE_SCHEMA_SET_ALL_EFFECT = {
-    vol.Required(CONF_EFFECT): vol.In([mode.lower() for mode in SCENES])
+    vol.Required(CONF_EFFECT): vol.In([mode.lower() for mode in EFFECTS + ["manual"]])
 }
 SERVICE_SCHEMA_SET_EFFECT = {
-    vol.Required(CONF_EFFECT): vol.In([mode.lower() for mode in SCENES])
+    vol.Required(CONF_EFFECT): vol.In([mode.lower() for mode in EFFECTS + ["manual"]])
 }
 
 CIRCADIAN_BRIGHTNESS = True
@@ -263,9 +265,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class CozyLifeLightBase(LightEntity):
     """Common CozyLife entity state and metadata handling."""
 
-    _unrecorded_attributes = frozenset(
-        {"brightness", "color_temp", "color_temp_kelvin"}
-    )
+    _unrecorded_attributes = frozenset({"brightness", "color_temp_kelvin"})
 
     def __init__(
         self,
@@ -354,9 +354,7 @@ class CozyLifeLightBase(LightEntity):
 class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
     """Home Assistant light backed by CozyLife light datapoints."""
 
-    _unrecorded_attributes = frozenset(
-        {"brightness", "color_temp", "color_temp_kelvin"}
-    )
+    _unrecorded_attributes = frozenset({"brightness", "color_temp_kelvin"})
 
     def __init__(
         self,
@@ -367,9 +365,10 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         name: str | None = None,
         area_id: str | None = None,
     ) -> None:
+        del scenes
         super().__init__(tcp_client, hass, name=name, area_id=area_id)
-        self._scenes = scenes
-        self._effect = "manual"
+        self._scenes = EFFECTS
+        self._effect = EFFECT_OFF
         self._cl = None
         self._transitioning = 0.0
         self._max_brightness = 255
@@ -377,10 +376,16 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         self._supports_brightness = False
         self._attr_is_on = False
         self._attr_brightness = 0
-        self._attr_color_temp = 153
+        self._color_temp_mired = 153
         self._attr_hs_color: tuple[float, float] | None = (0, 0)
-        self._min_mireds = colorutil.color_temperature_kelvin_to_mired(6500)
-        self._max_mireds = colorutil.color_temperature_kelvin_to_mired(2700)
+        self._min_color_temp_kelvin = 2700
+        self._max_color_temp_kelvin = 6500
+        self._min_mireds = colorutil.color_temperature_kelvin_to_mired(
+            self._max_color_temp_kelvin
+        )
+        self._max_mireds = colorutil.color_temperature_kelvin_to_mired(
+            self._min_color_temp_kelvin
+        )
         self._miredsratio = (self._max_mireds - self._min_mireds) / 1000
         self._attr_supported_color_modes: set[str] = {COLOR_MODE_ONOFF}
         self._attr_color_mode = COLOR_MODE_ONOFF
@@ -410,9 +415,9 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         self.SUPPORT_COZYLIGHT = self.get_supported_features()
 
     async def async_set_effect(self, effect: str) -> None:
-        self._effect = effect
+        self._effect = self._normalize_effect(effect)
         if self._attr_is_on:
-            await self.async_turn_on(effect=effect)
+            await self.async_turn_on(effect=self._effect)
 
     @property
     def effect(self):
@@ -421,6 +426,11 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
     @property
     def effect_list(self):
         return self._scenes
+
+    def _normalize_effect(self, effect: str | None) -> str:
+        if effect in (None, "", "manual", EFFECT_OFF):
+            return EFFECT_OFF
+        return effect
 
     def _resolve_active_color_mode(self, state: dict[str, Any]) -> str:
         if (
@@ -458,7 +468,7 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         self._attr_color_mode = self._resolve_active_color_mode(state)
 
         if state.get("2") == 0 and "3" in state and state["3"] < 60000:
-            self._attr_color_temp = round(
+            self._color_temp_mired = round(
                 self._max_mireds - state["3"] * self._miredsratio
             )
 
@@ -470,7 +480,7 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
             self._attr_hs_color = colorutil.color_RGB_to_hs(*rgb)
 
         if self._attr_color_mode == COLOR_MODE_WHITE:
-            self._attr_color_temp = None
+            self._color_temp_mired = None
 
     def calc_color_temp(self):
         if self._cl is None:
@@ -504,7 +514,7 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
                 self._attr_brightness = brightness
             if color_temp is not None:
                 payload["3"] = self._mired_to_device_color_temp(color_temp)
-                self._attr_color_temp = color_temp
+                self._color_temp_mired = color_temp
                 self._attr_color_mode = COLOR_MODE_COLOR_TEMP
             if transition is None:
                 transition = 5
@@ -603,18 +613,20 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP)
-        if color_temp is None and ATTR_COLOR_TEMP_KELVIN is not None:
+        color_temp = None
+        if ATTR_COLOR_TEMP_KELVIN is not None:
             color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
             if color_temp_kelvin is not None:
                 color_temp = colorutil.color_temperature_kelvin_to_mired(
                     color_temp_kelvin
                 )
+        if color_temp is None and ATTR_COLOR_TEMP is not None:
+            color_temp = kwargs.get(ATTR_COLOR_TEMP)
         hs_color = kwargs.get(ATTR_HS_COLOR)
         transition = kwargs.get(ATTR_TRANSITION)
-        effect = kwargs.get(ATTR_EFFECT)
+        effect = self._normalize_effect(kwargs.get(ATTR_EFFECT))
 
-        original_color_temp = self._attr_color_temp
+        original_color_temp = self._color_temp_mired or self._max_mireds
         original_hs = self._attr_hs_color
         original_brightness = self._attr_brightness if self._attr_is_on else 0
 
@@ -625,20 +637,20 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         attribute_updates = 0
 
         if brightness is not None:
-            self._effect = "manual"
+            self._effect = EFFECT_OFF
             self._attr_brightness = brightness
             payload["4"] = round(brightness / 255 * 1000)
             attribute_updates += 1
 
         if color_temp is not None:
-            self._effect = "manual"
+            self._effect = EFFECT_OFF
             self._attr_color_mode = COLOR_MODE_COLOR_TEMP
-            self._attr_color_temp = color_temp
+            self._color_temp_mired = color_temp
             payload["3"] = self._mired_to_device_color_temp(color_temp)
             attribute_updates += 1
 
         if hs_color is not None:
-            self._effect = "manual"
+            self._effect = EFFECT_OFF
             self._attr_color_mode = COLOR_MODE_HS
             self._attr_hs_color = hs_color
             rgb = colorutil.color_hs_to_RGB(*hs_color)
@@ -648,8 +660,7 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
             attribute_updates += 1
 
         if attribute_updates == 0:
-            if effect is not None:
-                self._effect = effect
+            self._effect = effect
             payload, transition = self._build_effect_payload(self._effect, transition)
 
         self._transitioning = 0
@@ -712,30 +723,18 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         return self._attr_color_mode
 
     @property
-    def color_temp(self) -> int | None:
-        return self._attr_color_temp
-
-    @property
-    def min_mireds(self):
-        return self._min_mireds
-
-    @property
-    def max_mireds(self):
-        return self._max_mireds
-
-    @property
     def color_temp_kelvin(self) -> int | None:
-        if self._attr_color_temp is None:
+        if self._color_temp_mired is None:
             return None
-        return colorutil.color_temperature_mired_to_kelvin(self._attr_color_temp)
+        return colorutil.color_temperature_mired_to_kelvin(self._color_temp_mired)
 
     @property
     def min_color_temp_kelvin(self) -> int:
-        return 2700
+        return self._min_color_temp_kelvin
 
     @property
     def max_color_temp_kelvin(self) -> int:
-        return 6500
+        return self._max_color_temp_kelvin
 
     @property
     def assumed_state(self):
@@ -745,7 +744,7 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
         if last_state and "last_effect" in last_state.attributes:
-            self._effect = last_state.attributes["last_effect"]
+            self._effect = self._normalize_effect(last_state.attributes["last_effect"])
 
     @property
     def extra_state_attributes(self):
