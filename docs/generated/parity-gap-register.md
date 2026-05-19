@@ -61,7 +61,6 @@ Live-validated capabilities:
 
 Parity gaps:
 - DPID `7` and `8` are now observed live through the `chrismas` effect path, but DPID `9`, `13`, `14`, `15`, and `44` remain catalog-declared and unverified
-- the integration-specific `natural` effect depends on Circadian Lighting runtime state and degrades to a plain `turn_on` path when that dependency is absent
 - bounded live probing on `2026-05-19` showed that `13` and `44` accept writes of `0` and `1`, while `9`, `14`, and `15` reject those bounded writes
 - broader live probing on `2026-05-19` showed that `13 = 1` reproducibly causes delayed power-off on this bulb, while `44` accepts a broad numeric range without observable query-surface deltas and rejects `65535`
 

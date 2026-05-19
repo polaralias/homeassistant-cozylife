@@ -160,8 +160,7 @@ Real light behavior includes:
 - color temperature,
 - HS color,
 - several named effects,
-- custom transition logic,
-- optional circadian-lighting integration if another custom component exists.
+- custom transition logic.
 
 Key anchors:
 - platform setup at `custom_components/cozylife/light.py:81`

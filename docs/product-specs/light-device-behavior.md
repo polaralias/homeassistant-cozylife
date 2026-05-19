@@ -74,5 +74,4 @@ This closes the earlier mismatch where HS-capable lights could initialize in `hs
 
 What is still not hardware-verified:
 - some catalog-declared light DPIDs for the verified PID,
-- longer-session behavior beyond the current focused live pass,
-- `natural` as a distinct effect path without the Circadian Lighting dependency loaded.
+- longer-session behavior beyond the current focused live pass.

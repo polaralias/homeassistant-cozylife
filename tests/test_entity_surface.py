@@ -313,6 +313,15 @@ def test_kelvin_properties_are_exposed_for_newer_home_assistant() -> None:
     assert entity.max_color_temp_kelvin == 6500
 
 
+@pytest.mark.cozylife
+def test_light_effect_list_excludes_removed_natural_mode() -> None:
+    """Circadian Lighting should not leak a synthetic natural effect."""
+
+    entity, _ = _build_light_entity({"1": 1, "2": 0, "3": 500, "4": 251})
+
+    assert "natural" not in entity.effect_list
+
+
 @pytest.mark.asyncio
 @pytest.mark.cozylife
 async def test_manual_controls_normalize_effect_to_effect_off() -> None:

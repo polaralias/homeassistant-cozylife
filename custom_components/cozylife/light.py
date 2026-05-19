@@ -64,23 +64,14 @@ else:
 MIN_INTERVAL = 0.2
 SERVICE_SET_EFFECT = "set_effect"
 SERVICE_SET_ALL_EFFECT = "set_all_effect"
-SCENES = ["manual", "natural", "sleep", "warm", "study", "chrismas"]
-EFFECTS = [EFFECT_OFF, "natural", "sleep", "warm", "study", "chrismas"]
+SCENES = ["manual", "sleep", "warm", "study", "chrismas"]
+EFFECTS = [EFFECT_OFF, "sleep", "warm", "study", "chrismas"]
 SERVICE_SCHEMA_SET_ALL_EFFECT = {
     vol.Required(CONF_EFFECT): vol.In([mode.lower() for mode in EFFECTS + ["manual"]])
 }
 SERVICE_SCHEMA_SET_EFFECT = {
     vol.Required(CONF_EFFECT): vol.In([mode.lower() for mode in EFFECTS + ["manual"]])
 }
-
-CIRCADIAN_BRIGHTNESS = True
-try:
-    import custom_components.circadian_lighting as cir
-
-    DATA_CIRCADIAN_LIGHTING = cir.DOMAIN
-except Exception:  # noqa: BLE001
-    CIRCADIAN_BRIGHTNESS = False
-    DATA_CIRCADIAN_LIGHTING = "circadian_lighting"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -211,10 +202,7 @@ async def async_setup_entry(
 
     async def async_update_lights(now=None) -> None:
         for light in lights:
-            if light.is_on and light.effect == "natural":
-                await light.async_turn_on(effect="natural")
-            else:
-                await hass.async_add_executor_job(light._refresh_state)
+            await hass.async_add_executor_job(light._refresh_state)
             light.async_write_ha_state()
             await asyncio.sleep(0.1)
 
@@ -369,7 +357,6 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         super().__init__(tcp_client, hass, name=name, area_id=area_id)
         self._scenes = EFFECTS
         self._effect = EFFECT_OFF
-        self._cl = None
         self._transitioning = 0.0
         self._max_brightness = 255
         self._min_brightness = 1
@@ -482,43 +469,12 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         if self._attr_color_mode == COLOR_MODE_WHITE:
             self._color_temp_mired = None
 
-    def calc_color_temp(self):
-        if self._cl is None:
-            self._cl = self.hass.data.get(DATA_CIRCADIAN_LIGHTING)
-            if self._cl is None:
-                return None
-        return colorutil.color_temperature_kelvin_to_mired(self._cl._colortemp)
-
-    def calc_brightness(self):
-        if self._cl is None:
-            self._cl = self.hass.data.get(DATA_CIRCADIAN_LIGHTING)
-            if self._cl is None:
-                return None
-        if self._cl._percent > 0:
-            return self._max_brightness
-        return round(
-            ((self._max_brightness - self._min_brightness) * ((100 + self._cl._percent) / 100))
-            + self._min_brightness
-        )
-
     def _mired_to_device_color_temp(self, mireds: int) -> int:
         return 1000 - round((mireds - self._min_mireds) / self._miredsratio)
 
     def _build_effect_payload(self, effect: str, transition: float | None) -> tuple[dict[str, Any], float | None]:
         payload: dict[str, Any] = {"1": 255, "2": 0}
-        if effect == "natural" and CIRCADIAN_BRIGHTNESS:
-            brightness = self.calc_brightness()
-            color_temp = self.calc_color_temp()
-            if brightness is not None:
-                payload["4"] = round(brightness / 255 * 1000)
-                self._attr_brightness = brightness
-            if color_temp is not None:
-                payload["3"] = self._mired_to_device_color_temp(color_temp)
-                self._color_temp_mired = color_temp
-                self._attr_color_mode = COLOR_MODE_COLOR_TEMP
-            if transition is None:
-                transition = 5
-        elif effect == "sleep":
+        if effect == "sleep":
             payload["3"] = 0
             payload["4"] = 12
             self._attr_color_mode = COLOR_MODE_COLOR_TEMP
@@ -681,9 +637,6 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         self.async_write_ha_state()
 
         transition = kwargs.get(ATTR_TRANSITION)
-        if self._effect == "natural" and transition is None:
-            transition = 5
-
         original_brightness = self._attr_brightness
         if transition:
             self._transitioning = time.time()

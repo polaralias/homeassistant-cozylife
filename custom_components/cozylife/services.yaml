@@ -10,7 +10,6 @@ set_all_effect:
         select:
           options:
             - "manual"
-            - "natural"
             - "sleep"
             - "warm"
             - "study"
@@ -31,7 +30,6 @@ set_effect:
         select:
           options:
             - "manual"
-            - "natural"
             - "sleep"
             - "warm"
             - "study"

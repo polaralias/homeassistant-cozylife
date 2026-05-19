@@ -216,7 +216,6 @@ Code anchors:
 
 The integration exposes these effect names:
 - `manual`
-- `natural`
 - `sleep`
 - `warm`
 - `study`
@@ -229,7 +228,6 @@ Code anchors:
 Notes:
 - `chrismas` is spelled that way in both code and service metadata.
 - the effect implementation is uneven:
-  - `natural` depends on another integration if present,
   - `chrismas` uses a hard-coded raw payload,
   - the other effects write simple brightness and color-temperature values.
 
