@@ -1,0 +1,38 @@
+set_all_effect:
+  name: Apply effect to all CozyLife lights
+  description: Apply one named CozyLife light mode to every loaded CozyLife light entity.
+  fields:
+    effect:
+      name: Effect name
+      description: Selected CozyLife light mode.
+      required: true
+      selector:
+        select:
+          options:
+            - "manual"
+            - "natural"
+            - "sleep"
+            - "warm"
+            - "study"
+            - "chrismas"
+set_effect:
+  name: Apply effect
+  description: Apply one named CozyLife light mode to the targeted light entity.
+  target:
+    entity:
+      integration: cozylife
+      domain: light
+  fields:
+    effect:
+      name: Effect name
+      description: Selected CozyLife light mode.
+      required: true
+      selector:
+        select:
+          options:
+            - "manual"
+            - "natural"
+            - "sleep"
+            - "warm"
+            - "study"
+            - "chrismas"
