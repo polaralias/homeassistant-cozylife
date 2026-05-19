@@ -34,6 +34,7 @@ class _FakeConfigEntries:
         self.updated_entry = None
         self.updated_data = None
         self.reloaded_entry_id = None
+        self._known_entries = {}
 
     def async_update_entry(self, entry, data) -> None:
         self.updated_entry = entry
@@ -42,14 +43,19 @@ class _FakeConfigEntries:
     async def async_reload(self, entry_id: str) -> None:
         self.reloaded_entry_id = entry_id
 
+    def async_get_known_entry(self, entry_id: str):
+        return self._known_entries[entry_id]
+
 
 class _FakeHass:
     """Minimal Home Assistant double for options-flow tests."""
 
-    def __init__(self, entry_id: str) -> None:
+    def __init__(self, entry_id: str, entry=None) -> None:
         self.config = _FakeConfig()
         self.config_entries = _FakeConfigEntries()
         self.data = {DOMAIN: {entry_id: {}}}
+        if entry is not None:
+            self.config_entries._known_entries[entry_id] = entry
 
     async def async_add_executor_job(self, func, *args):
         return func(*args)
@@ -66,6 +72,35 @@ class _ProbeTcpClient:
 
     def disconnect(self) -> None:
         return None
+
+
+@pytest.mark.cozylife
+def test_options_flow_avoids_deprecated_config_entry_assignment() -> None:
+    """Options flow should bootstrap without setting the deprecated attribute."""
+
+    entry = SimpleNamespace(entry_id="entry-options-1", data={}, options={})
+
+    with patch("homeassistant.config_entries.report_usage", return_value=None):
+        flow = CozyLifeOptionsFlow(entry)
+
+    assert flow._config_entry is entry
+    assert "config_entry" not in flow.__dict__
+
+
+@pytest.mark.cozylife
+def test_options_flow_uses_modern_config_entry_lookup_when_runtime_property_is_needed() -> None:
+    """Flow methods should work through HA's config_entry property lookup path."""
+
+    entry = SimpleNamespace(entry_id="entry-options-2", data={}, options={})
+
+    with patch("homeassistant.config_entries.report_usage", return_value=None):
+        flow = CozyLifeOptionsFlow(entry)
+
+    flow.hass = _FakeHass(entry.entry_id, entry)
+    flow.handler = entry.entry_id
+    del flow._config_entry
+
+    assert flow.config_entry is entry
 
 
 @pytest.mark.asyncio

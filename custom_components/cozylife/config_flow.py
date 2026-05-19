@@ -872,7 +872,7 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
     """Handle options for the CozyLife integration."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self.config_entry = config_entry
+        self._config_entry = config_entry
         self._diy_probe_cache: dict[str, dict[str, Any]] = {}
         self._multi_devices: list[dict[str, Any]] = []
         self._multi_results: list[dict[str, Any]] = []

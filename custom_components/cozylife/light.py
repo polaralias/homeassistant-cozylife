@@ -12,21 +12,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
-    ATTR_EFFECT,
-    ATTR_HS_COLOR,
-    ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
-    LightEntity,
-)
+from homeassistant.components import light as light_platform
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EFFECT, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -41,6 +27,38 @@ from homeassistant.util import color as colorutil
 from .const import CONF_AREA, DEFAULT_LIGHT_POLL_INTERVAL, DOMAIN, MANUFACTURER
 from .helpers import normalize_area_value, resolve_area_id
 from .tcp_client import tcp_client
+
+ATTR_BRIGHTNESS = light_platform.ATTR_BRIGHTNESS
+ATTR_COLOR_TEMP = light_platform.ATTR_COLOR_TEMP
+ATTR_EFFECT = light_platform.ATTR_EFFECT
+ATTR_HS_COLOR = light_platform.ATTR_HS_COLOR
+ATTR_TRANSITION = light_platform.ATTR_TRANSITION
+ATTR_COLOR_TEMP_KELVIN = getattr(light_platform, "ATTR_COLOR_TEMP_KELVIN", None)
+
+COLOR_MODE_BRIGHTNESS = light_platform.COLOR_MODE_BRIGHTNESS
+COLOR_MODE_COLOR_TEMP = light_platform.COLOR_MODE_COLOR_TEMP
+COLOR_MODE_HS = light_platform.COLOR_MODE_HS
+COLOR_MODE_ONOFF = light_platform.COLOR_MODE_ONOFF
+COLOR_MODE_WHITE = getattr(light_platform, "COLOR_MODE_WHITE", None)
+LightEntity = light_platform.LightEntity
+
+ColorMode = getattr(light_platform, "ColorMode", None)
+if ColorMode is not None:
+    COLOR_MODE_BRIGHTNESS = ColorMode.BRIGHTNESS
+    COLOR_MODE_COLOR_TEMP = ColorMode.COLOR_TEMP
+    COLOR_MODE_HS = ColorMode.HS
+    COLOR_MODE_ONOFF = ColorMode.ONOFF
+    COLOR_MODE_WHITE = getattr(ColorMode, "WHITE", COLOR_MODE_WHITE)
+
+LightEntityFeature = getattr(light_platform, "LightEntityFeature", None)
+if LightEntityFeature is None:
+    FEATURE_EFFECT = light_platform.SUPPORT_EFFECT
+    FEATURE_TRANSITION = light_platform.SUPPORT_TRANSITION
+    FEATURE_BRIGHTNESS = light_platform.SUPPORT_BRIGHTNESS
+else:
+    FEATURE_EFFECT = LightEntityFeature.EFFECT
+    FEATURE_TRANSITION = LightEntityFeature.TRANSITION
+    FEATURE_BRIGHTNESS = getattr(LightEntityFeature, "BRIGHTNESS", 0)
 
 MIN_INTERVAL = 0.2
 SERVICE_SET_EFFECT = "set_effect"
@@ -245,7 +263,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class CozyLifeLightBase(LightEntity):
     """Common CozyLife entity state and metadata handling."""
 
-    _unrecorded_attributes = frozenset({"brightness", "color_temp"})
+    _unrecorded_attributes = frozenset(
+        {"brightness", "color_temp", "color_temp_kelvin"}
+    )
 
     def __init__(
         self,
@@ -334,7 +354,9 @@ class CozyLifeLightBase(LightEntity):
 class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
     """Home Assistant light backed by CozyLife light datapoints."""
 
-    _unrecorded_attributes = frozenset({"brightness", "color_temp"})
+    _unrecorded_attributes = frozenset(
+        {"brightness", "color_temp", "color_temp_kelvin"}
+    )
 
     def __init__(
         self,
@@ -352,6 +374,7 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         self._transitioning = 0.0
         self._max_brightness = 255
         self._min_brightness = 1
+        self._supports_brightness = False
         self._attr_is_on = False
         self._attr_brightness = 0
         self._attr_color_temp = 153
@@ -360,20 +383,29 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         self._max_mireds = colorutil.color_temperature_kelvin_to_mired(2700)
         self._miredsratio = (self._max_mireds - self._min_mireds) / 1000
         self._attr_supported_color_modes: set[str] = {COLOR_MODE_ONOFF}
-        self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+        self._attr_color_mode = COLOR_MODE_ONOFF
 
         model_name = (self._tcp_client._device_model_name or "").lower()
         dpids = {int(value) for value in tcp_client.dpid if isinstance(value, int)}
         if "switch" not in model_name:
-            if 3 in dpids:
-                self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
-                self._attr_color_mode = COLOR_MODE_COLOR_TEMP
-            if 4 in dpids:
-                self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
-                self._attr_color_mode = COLOR_MODE_BRIGHTNESS
-            if 5 in dpids or 6 in dpids:
-                self._attr_supported_color_modes.add(COLOR_MODE_HS)
-                self._attr_color_mode = COLOR_MODE_HS
+            supports_color_temp = 3 in dpids
+            self._supports_brightness = 4 in dpids
+            supports_hs = 5 in dpids or 6 in dpids
+
+            supported_color_modes: set[str] = set()
+            if supports_color_temp:
+                supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            elif supports_hs and self._supports_brightness and COLOR_MODE_WHITE is not None:
+                supported_color_modes.add(COLOR_MODE_WHITE)
+            elif self._supports_brightness:
+                supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+
+            if supports_hs:
+                supported_color_modes.add(COLOR_MODE_HS)
+
+            if supported_color_modes:
+                self._attr_supported_color_modes = supported_color_modes
+                self._attr_color_mode = next(iter(sorted(supported_color_modes)))
 
         self.SUPPORT_COZYLIGHT = self.get_supported_features()
 
@@ -410,6 +442,15 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         if "4" in state and COLOR_MODE_BRIGHTNESS in self._attr_supported_color_modes:
             return COLOR_MODE_BRIGHTNESS
 
+        if COLOR_MODE_WHITE is not None and COLOR_MODE_WHITE in self._attr_supported_color_modes:
+            return COLOR_MODE_WHITE
+
+        if COLOR_MODE_COLOR_TEMP in self._attr_supported_color_modes:
+            return COLOR_MODE_COLOR_TEMP
+
+        if COLOR_MODE_HS in self._attr_supported_color_modes:
+            return COLOR_MODE_HS
+
         return COLOR_MODE_ONOFF
 
     def _apply_common_state(self, state: dict[str, Any]) -> None:
@@ -427,6 +468,9 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         if "5" in state and "6" in state and state["5"] < 60000:
             rgb = colorutil.color_hs_to_RGB(round(state["5"]), round(state["6"] / 10))
             self._attr_hs_color = colorutil.color_RGB_to_hs(*rgb)
+
+        if self._attr_color_mode == COLOR_MODE_WHITE:
+            self._attr_color_temp = None
 
     def calc_color_temp(self):
         if self._cl is None:
@@ -560,6 +604,12 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
+        if color_temp is None and ATTR_COLOR_TEMP_KELVIN is not None:
+            color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
+            if color_temp_kelvin is not None:
+                color_temp = colorutil.color_temperature_kelvin_to_mired(
+                    color_temp_kelvin
+                )
         hs_color = kwargs.get(ATTR_HS_COLOR)
         transition = kwargs.get(ATTR_TRANSITION)
         effect = kwargs.get(ATTR_EFFECT)
@@ -674,6 +724,20 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         return self._max_mireds
 
     @property
+    def color_temp_kelvin(self) -> int | None:
+        if self._attr_color_temp is None:
+            return None
+        return colorutil.color_temperature_mired_to_kelvin(self._attr_color_temp)
+
+    @property
+    def min_color_temp_kelvin(self) -> int:
+        return 2700
+
+    @property
+    def max_color_temp_kelvin(self) -> int:
+        return 6500
+
+    @property
     def assumed_state(self):
         return True
 
@@ -695,7 +759,7 @@ class CozyLifeLight(CozyLifeLightBase, RestoreEntity):
         return self.SUPPORT_COZYLIGHT
 
     def get_supported_features(self) -> int:
-        features = SUPPORT_EFFECT | SUPPORT_TRANSITION
-        if COLOR_MODE_BRIGHTNESS in self._attr_supported_color_modes:
-            features |= SUPPORT_BRIGHTNESS
+        features = FEATURE_EFFECT | FEATURE_TRANSITION
+        if self._supports_brightness:
+            features |= FEATURE_BRIGHTNESS
         return features

@@ -7,7 +7,6 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
-from homeassistant.components.light import COLOR_MODE_BRIGHTNESS
 
 from custom_components.cozylife.const import DOMAIN
 from custom_components.cozylife import light as light_platform
@@ -231,8 +230,20 @@ def test_light_refresh_uses_live_white_mode_over_startup_hs_inference() -> None:
 
     entity._refresh_state()
 
-    assert entity.color_mode == COLOR_MODE_BRIGHTNESS
+    assert entity.color_mode == light_platform.COLOR_MODE_WHITE
     assert entity.brightness == 127
+
+
+@pytest.mark.cozylife
+def test_modern_supported_color_modes_do_not_mix_brightness_with_ct_or_hs() -> None:
+    """Modern HA color modes should avoid invalid ONOFF/BRIGHTNESS combinations."""
+
+    entity, _ = _build_light_entity({"1": 1, "2": 0, "3": 500, "4": 251, "5": 120, "6": 800})
+
+    assert entity.supported_color_modes == {
+        light_platform.COLOR_MODE_COLOR_TEMP,
+        light_platform.COLOR_MODE_HS,
+    }
 
 
 @pytest.mark.asyncio
@@ -276,6 +287,30 @@ async def test_hs_transition_keeps_existing_brightness() -> None:
     assert state["4"] == 251
     assert state["5"] == 240
     assert state["6"] == 1000
+
+
+@pytest.mark.asyncio
+@pytest.mark.cozylife
+async def test_kelvin_color_temp_turn_on_maps_to_device_payload() -> None:
+    """Newer Kelvin-based HA light API should still drive CozyLife CT writes."""
+
+    entity, client = _build_light_entity({"1": 1, "2": 0, "3": 500, "4": 251})
+
+    await entity.async_turn_on(color_temp_kelvin=2700)
+
+    state = client.query()
+    assert state["3"] == 0
+
+
+@pytest.mark.cozylife
+def test_kelvin_properties_are_exposed_for_newer_home_assistant() -> None:
+    """Entity should expose Kelvin properties alongside mired-based ones."""
+
+    entity, _ = _build_light_entity({"1": 1, "2": 0, "3": 500, "4": 251})
+
+    assert entity.color_temp_kelvin is not None
+    assert entity.min_color_temp_kelvin == 2700
+    assert entity.max_color_temp_kelvin == 6500
 
 
 @pytest.mark.asyncio
