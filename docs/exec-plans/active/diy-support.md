@@ -6,29 +6,32 @@ Status: Active
 
 Provide a safe custom-extension path for users with unsupported or partially understood CozyLife devices, without turning undocumented protocol behavior into default product claims.
 
-## Recommended Sequence
-
-1. Define the contract for DIY support in canonical docs.
-2. Start with read-only or read-first raw DPID mapping.
-3. Reuse current sensor-style datapoint surfacing where possible.
-4. Keep DIY behavior clearly separate from supported product behavior.
-5. Only consider write-capable DIY support after the read-only surface is stable.
-
-## First Iteration Target
+## Current Implemented Slice
 
 - per-device custom raw DPID mapping
 - query-backed values only
 - custom entity naming
 - explicit labeling that the mapping is user-defined and not repository-verified
+- constrained per-device writable boolean switch mappings behind explicit opt-in
+- writable candidates limited to DPIDs that are both observed live and present in the stored catalog-backed DPID list for the device
 
-## Why This Order
+## What This Plan Still Covers
+
+- keep DIY behavior clearly separate from supported product behavior
+- decide whether the current writable DIY slice is sufficient or should remain tightly capped
+- document future extension rules before adding broader custom entity types
+- keep the contributor and support policy explicit as more DIY evidence arrives
+
+## Why This Shape
 
 - the repository already has raw datapoint exposure patterns in `sensor.py`
 - read-first behavior is safer than undocumented writes
+- the current writable path stays narrow enough to avoid turning protocol archaeology into a default product surface
 - it gives unsupported hardware owners a practical path without forcing the repo to overclaim support
 
 ## Deferred Work
 
-- write-capable DIY controls
+- additional write-capable DIY controls beyond boolean switches
+- generic writable number, select, or button synthesis
 - automatic promotion from DIY mapping into supported product behavior
 - generic unknown-device entity synthesis without explicit user configuration

@@ -60,7 +60,15 @@ Promotion still requires the repository evidence bar and an explicit product dec
 
 ## Open Questions
 
-- Should DIY support apply only to devices already classified as `sensor`, or to any configured device?
-- Should DIY mappings live in config-entry options, a helper config structure, or a future UI flow?
-- Should the first iteration expose only sensor-like values, even for unknown devices?
-- Should write-capable DIY support exist at all, or remain out of scope unless a strong use case emerges?
+Resolved current contract:
+
+- DIY support applies to any configured device with explicit mappings, including `unknown` devices.
+- DIY mappings currently live in config-entry options.
+- The read path exposes custom sensor-style values.
+- The current write path exists only for explicitly opted-in per-device boolean switch mappings.
+
+Still open:
+
+- whether DIY configuration should stay in the options flow long term or move to a more guided UI,
+- whether the writable DIY surface should remain capped at boolean switches,
+- whether any future custom entity types can be added without weakening the repository support contract.

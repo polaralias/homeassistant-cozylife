@@ -78,7 +78,7 @@ Desired state:
 - broad refactors are deferred until the harness exists and one or more slices have proven it out.
 
 Verification status:
-- resolved by this document at the guidance level, not yet exercised by a full implementation session.
+- resolved by this document and now exercised by multiple focused implementation sessions covering entity-surface policy, DIY support, TCP-client behavior, rediscovery behavior, and live light validation.
 
 ## Safe First-Slice Heuristics
 
