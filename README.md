@@ -34,7 +34,7 @@ What is currently verified:
 - the integration can discover a live CozyLife light on a LAN through the repository's own broadcast discovery code,
 - the integration can connect to a live bulb on TCP port `5555`,
 - the repository can fetch device info and state using the current `tcp_client.py` implementation,
-- the repository can drive the full repo-exposed `rju4K7` light surface on real hardware and restore the original state after the pass,
+- the repository can drive the full repo-exposed verified light surface on real hardware and restore the original state after the pass,
 - `model.json` is actively used to classify device type and capability metadata,
 - light support is verified on real hardware and treated as first-class supported.
 
@@ -57,8 +57,8 @@ Support truth rules:
 
 Current light support note:
 - lights are treated as first-class supported based on prior successful Home Assistant control plus current live discovery/query/control verification,
-- the seeded parity register entry now includes a full live validation pass for `rju4K7`,
-- catalog-declared DPID `9`, `13`, `14`, `15`, and `44` for `rju4K7` remain unverified and unmapped in the current repo surface.
+- the seeded parity register entry now includes a full live validation pass for the current verified light PID,
+- some catalog-declared light DPIDs for that verified PID remain unverified and unmapped in the current repo surface.
 
 What is not yet fully verified:
 - switch behavior on real hardware,
@@ -145,7 +145,7 @@ The goal is not just "it works on my LAN." The goal is a public-quality integrat
 - [Execution Plans](docs/exec-plans/)
 - [CI](docs/CI.md)
 - [Parity Register](docs/generated/parity-gap-register.md)
-- [Latest `rju4K7` Live Validation](docs/generated/rju4k7-live-validation-2026-05-19.md)
+- [Latest Verified Light Live Validation](docs/generated/rju4k7-live-validation-2026-05-19.md)
 - [Tested But Not Confirmed](docs/generated/tested-but-not-confirmed-capabilities.md)
 
 ## Versioning
