@@ -1,0 +1,114 @@
+name: Catalog Drift
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  detect-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch upstream catalog and diff snapshot
+        id: drift
+        env:
+          UPSTREAM_URL: https://api-us.doiting.com/api/device_product/model?lang=en
+        run: |
+          python - <<'PY'
+          import difflib
+          import json
+          import os
+          import urllib.request
+          from pathlib import Path
+
+          repo_path = Path("custom_components/cozylife/model.json")
+          upstream_path = Path("upstream-model.json")
+          diff_path = Path("catalog-drift.diff")
+          summary_path = Path("catalog-drift-summary.md")
+
+          with urllib.request.urlopen(os.environ["UPSTREAM_URL"], timeout=30) as response:
+              upstream_bytes = response.read()
+
+          upstream_text = upstream_bytes.decode("utf-8")
+          upstream_path.write_text(upstream_text, encoding="utf-8")
+          repo_text = repo_path.read_text(encoding="utf-8")
+
+          try:
+              repo_json = json.loads(repo_text)
+              upstream_json = json.loads(upstream_text)
+          except json.JSONDecodeError:
+              repo_json = None
+              upstream_json = None
+
+          if repo_json is not None and upstream_json is not None:
+              repo_pretty = json.dumps(repo_json, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+              upstream_pretty = json.dumps(upstream_json, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+          else:
+              repo_pretty = repo_text
+              upstream_pretty = upstream_text
+
+          diff_lines = list(
+              difflib.unified_diff(
+                  repo_pretty.splitlines(),
+                  upstream_pretty.splitlines(),
+                  fromfile="custom_components/cozylife/model.json",
+                  tofile="upstream-model.json",
+                  lineterm="",
+              )
+          )
+
+          drift = bool(diff_lines)
+          diff_path.write_text("\n".join(diff_lines) + ("\n" if diff_lines else ""), encoding="utf-8")
+
+          summary_lines = [
+              "# Catalog Drift Report",
+              "",
+              f"- drift detected: `{'yes' if drift else 'no'}`",
+              f"- upstream source: `{os.environ['UPSTREAM_URL']}`",
+              "- policy: observational only; no repository files were rewritten",
+              "",
+          ]
+
+          if drift:
+              summary_lines.extend(
+                  [
+                      "The checked-in `model.json` differs from the upstream snapshot.",
+                      "Review the uploaded diff artifact before deciding whether to update the repository copy.",
+                  ]
+              )
+          else:
+              summary_lines.append("The checked-in `model.json` matches the upstream snapshot.")
+
+          summary_path.write_text("\n".join(summary_lines) + "\n", encoding="utf-8")
+
+          github_output = Path(os.environ["GITHUB_OUTPUT"])
+          with github_output.open("a", encoding="utf-8") as fh:
+              fh.write(f"drift={'true' if drift else 'false'}\n")
+          PY
+
+      - name: Upload drift artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog-drift
+          path: |
+            upstream-model.json
+            catalog-drift.diff
+            catalog-drift-summary.md
+
+      - name: Write workflow summary
+        run: cat catalog-drift-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Emit observational notice
+        if: steps.drift.outputs.drift == 'true'
+        run: echo "::warning title=Catalog drift detected::The upstream CozyLife catalog differs from custom_components/cozylife/model.json. Review the uploaded artifact; no files were changed automatically."

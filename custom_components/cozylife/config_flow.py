@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ipaddress
 import logging
+import re
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,9 @@ from homeassistant.helpers import network, selector
 
 from .const import (
     CONF_AREA,
+    CONF_DIY_CONTROL_MAPPINGS,
+    CONF_DIY_DPID_MAPPINGS,
+    CONF_ENABLE_DIY_WRITES,
     CONF_LIGHT_POLL_INTERVAL,
     CONF_SWITCH_POLL_INTERVAL,
     DEFAULT_LIGHT_POLL_INTERVAL,
@@ -29,6 +33,9 @@ from .const import (
     SWITCH_TYPE_CODE,
 )
 from .helpers import (
+    flatten_discovery_result,
+    normalize_diy_control_mappings,
+    normalize_diy_dpid_mappings,
     prepare_area_value_for_storage,
     resolve_area_id,
 )
@@ -52,10 +59,134 @@ def _coerce_ip(value: str) -> str:
 
 TIMEOUT_VALIDATOR = vol.All(vol.Coerce(float), vol.Range(min=0.05, max=10.0))
 
+
+def _serialize_diy_dpid_mappings(mappings: list[dict[str, Any]]) -> str:
+    """Return a compact text representation of DIY DPID mappings."""
+
+    return ", ".join(
+        f"{item['dpid']}={item['name']}"
+        for item in normalize_diy_dpid_mappings(mappings)
+    )
+
+
+def _serialize_diy_control_mappings(mappings: list[dict[str, Any]]) -> str:
+    """Return a compact text representation of DIY control mappings."""
+
+    return ", ".join(
+        f"{item['dpid']}={item['entity_kind']}:{item['value_type']}:{item['name']}"
+        for item in normalize_diy_control_mappings(mappings)
+    )
+
+
+def _parse_diy_dpid_mappings(
+    raw_value: object,
+    allowed_dpids: set[int],
+) -> tuple[list[dict[str, Any]] | None, str | None]:
+    """Parse user-supplied DIY DPID mappings from options flow input."""
+
+    if raw_value is None:
+        return [], None
+
+    if not isinstance(raw_value, str):
+        return None, "invalid_diy_dpid_mappings"
+
+    text = raw_value.strip()
+    if not text:
+        return [], None
+
+    parsed: list[dict[str, Any]] = []
+    seen: set[int] = set()
+    chunks = [item.strip() for item in re.split(r"[\r\n,;]+", text) if item.strip()]
+
+    for chunk in chunks:
+        if "=" not in chunk:
+            return None, "invalid_diy_dpid_mappings"
+
+        raw_dpid, raw_name = chunk.split("=", 1)
+        raw_dpid = raw_dpid.strip()
+        name = raw_name.strip()
+
+        if not raw_dpid.isdigit() or not name:
+            return None, "invalid_diy_dpid_mappings"
+
+        dpid = int(raw_dpid)
+        if dpid < 1 or dpid in seen:
+            return None, "invalid_diy_dpid_mappings"
+
+        if allowed_dpids and dpid not in allowed_dpids:
+            return None, "unsupported_diy_dpid"
+
+        parsed.append({"dpid": dpid, "name": name})
+        seen.add(dpid)
+
+    return parsed, None
+
+
+def _parse_diy_control_mappings(
+    raw_value: object,
+    allowed_dpids: set[int],
+    writable_dpids: set[int],
+) -> tuple[list[dict[str, Any]] | None, str | None]:
+    """Parse user-supplied DIY control mappings from options flow input."""
+
+    if raw_value is None:
+        return [], None
+
+    if not isinstance(raw_value, str):
+        return None, "invalid_diy_control_mappings"
+
+    text = raw_value.strip()
+    if not text:
+        return [], None
+
+    parsed: list[dict[str, Any]] = []
+    seen: set[int] = set()
+    chunks = [item.strip() for item in re.split(r"[\r\n,;]+", text) if item.strip()]
+
+    for chunk in chunks:
+        if "=" not in chunk:
+            return None, "invalid_diy_control_mappings"
+
+        raw_dpid, raw_spec = chunk.split("=", 1)
+        raw_dpid = raw_dpid.strip()
+        spec = raw_spec.strip()
+
+        if not raw_dpid.isdigit() or spec.count(":") != 2:
+            return None, "invalid_diy_control_mappings"
+
+        entity_kind, value_type, raw_name = [part.strip() for part in spec.split(":", 2)]
+        if not entity_kind or not value_type or not raw_name:
+            return None, "invalid_diy_control_mappings"
+
+        dpid = int(raw_dpid)
+        if dpid < 1 or dpid in seen:
+            return None, "invalid_diy_control_mappings"
+
+        if allowed_dpids and dpid not in allowed_dpids:
+            return None, "unsupported_diy_dpid"
+
+        if writable_dpids and dpid not in writable_dpids:
+            return None, "unsupported_diy_write_dpid"
+
+        if entity_kind.lower() != "switch" or value_type.lower() != "bool":
+            return None, "unsupported_diy_control_shape"
+
+        parsed.append(
+            {
+                "dpid": dpid,
+                "name": raw_name,
+                "entity_kind": "switch",
+                "value_type": "bool",
+            }
+        )
+        seen.add(dpid)
+
+    return parsed, None
+
 class CozyLifeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the CozyLife config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         self._discovered_devices: list[dict[str, Any]] = []
@@ -742,6 +873,7 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         self.config_entry = config_entry
+        self._diy_probe_cache: dict[str, dict[str, Any]] = {}
         self._multi_devices: list[dict[str, Any]] = []
         self._multi_results: list[dict[str, Any]] = []
         self._multi_index: int = 0
@@ -770,6 +902,67 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
             self._switch_poll_interval = float(DEFAULT_SWITCH_POLL_INTERVAL)
         self._multi_light_poll_interval: float = self._light_poll_interval
         self._multi_switch_poll_interval: float = self._switch_poll_interval
+
+    async def _async_probe_diy_capabilities(
+        self,
+        device_info: Mapping[str, Any],
+        timeout: float,
+    ) -> dict[str, Any]:
+        """Probe live state and derive constrained DIY candidates for a device."""
+
+        device_id = str(device_info.get("did") or device_info.get("ip") or "")
+        if device_id and device_id in self._diy_probe_cache:
+            return self._diy_probe_cache[device_id]
+
+        allowed_dpids = {
+            int(dpid)
+            for dpid in device_info.get("dpid", [])
+            if isinstance(dpid, int)
+        }
+        observed_dpids: set[int] = set()
+        boolean_dpids: set[int] = set()
+
+        ip_value = device_info.get("ip")
+        if isinstance(ip_value, str) and ip_value:
+            model_path = Path(
+                self.hass.config.path("custom_components", DOMAIN, "model.json")
+            )
+            client = tcp_client(ip_value, timeout=timeout, model_path=model_path)
+            client._device_id = device_info.get("did")
+            client._pid = device_info.get("pid")
+            client._dpid = device_info.get("dpid") or []
+            client._device_model_name = device_info.get("dmn")
+
+            try:
+                live_state = await self.hass.async_add_executor_job(client.query)
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.debug("DIY capability probe failed for %s: %s", device_id, err)
+                live_state = None
+            finally:
+                client.disconnect()
+
+            if isinstance(live_state, dict):
+                for key, value in live_state.items():
+                    if not str(key).isdigit():
+                        continue
+
+                    dpid = int(key)
+                    observed_dpids.add(dpid)
+                    if value in (0, 1, True, False):
+                        boolean_dpids.add(dpid)
+
+        candidate_dpids = allowed_dpids & observed_dpids if observed_dpids else set()
+        writable_dpids = candidate_dpids & boolean_dpids
+
+        result = {
+            "allowed_dpids": allowed_dpids,
+            "observed_dpids": observed_dpids,
+            "candidate_dpids": candidate_dpids,
+            "writable_dpids": writable_dpids,
+        }
+        if device_id:
+            self._diy_probe_cache[device_id] = result
+        return result
 
     def _build_ip_selector(self) -> selector.TextSelector:
         """Return a text selector configured for IP input."""
@@ -849,6 +1042,13 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
             return await self._async_step_legacy(user_input)
 
         device = data.get("device", {})
+        probe_result = await self._async_probe_diy_capabilities(
+            device,
+            float(data.get("timeout", 0.3)),
+        )
+        allowed_dpids = probe_result["allowed_dpids"]
+        candidate_dpids = probe_result["candidate_dpids"]
+        writable_dpids = probe_result["writable_dpids"]
 
         if user_input is not None:
             ip_value = user_input.get("ip", "")
@@ -863,6 +1063,9 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
             switch_poll_input = user_input.get(
                 CONF_SWITCH_POLL_INTERVAL, self._switch_poll_interval
             )
+            diy_mappings_input = user_input.get(CONF_DIY_DPID_MAPPINGS, "")
+            diy_control_input = user_input.get(CONF_DIY_CONTROL_MAPPINGS, "")
+            enable_diy_writes = bool(user_input.get(CONF_ENABLE_DIY_WRITES))
 
             try:
                 ip_value = _coerce_ip(ip_value)
@@ -893,8 +1096,42 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
             else:
                 switch_poll_value = float(switch_poll_value)
 
+            diy_mappings, diy_error = _parse_diy_dpid_mappings(
+                diy_mappings_input,
+                candidate_dpids or allowed_dpids,
+            )
+            if diy_error:
+                errors[CONF_DIY_DPID_MAPPINGS] = diy_error
+
+            diy_control_mappings, diy_control_error = _parse_diy_control_mappings(
+                diy_control_input,
+                candidate_dpids or allowed_dpids,
+                writable_dpids,
+            )
+            if diy_control_error:
+                errors[CONF_DIY_CONTROL_MAPPINGS] = diy_control_error
+
+            if diy_control_mappings and not enable_diy_writes:
+                errors[CONF_ENABLE_DIY_WRITES] = "enable_diy_writes_required"
+
+            if diy_mappings and diy_control_mappings:
+                read_dpids = {item["dpid"] for item in diy_mappings}
+                control_dpids = {item["dpid"] for item in diy_control_mappings}
+                if read_dpids & control_dpids:
+                    errors[CONF_DIY_CONTROL_MAPPINGS] = "duplicate_diy_dpid"
+
             if not errors:
                 updated_device = {**device, "ip": ip_value}
+                if diy_mappings:
+                    updated_device[CONF_DIY_DPID_MAPPINGS] = diy_mappings
+                else:
+                    updated_device.pop(CONF_DIY_DPID_MAPPINGS, None)
+                if diy_control_mappings and enable_diy_writes:
+                    updated_device[CONF_DIY_CONTROL_MAPPINGS] = diy_control_mappings
+                    updated_device[CONF_ENABLE_DIY_WRITES] = True
+                else:
+                    updated_device.pop(CONF_DIY_CONTROL_MAPPINGS, None)
+                    updated_device.pop(CONF_ENABLE_DIY_WRITES, None)
                 updated_data = {
                     **data,
                     "device": updated_device,
@@ -905,8 +1142,6 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
 
                 if "location" in updated_data:
                     updated_data.pop("location", None)
-                if "name" in updated_data and CONF_NAME in updated_data:
-                    updated_data.pop("name", None)
 
                 options_data = {
                     **self.config_entry.options,
@@ -936,6 +1171,13 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
         suggested_area = resolve_area_id(self.hass, raw_area)
         suggested_ip = device.get("ip", "")
         suggested_timeout = data.get("timeout", 0.3)
+        suggested_diy_mappings = _serialize_diy_dpid_mappings(
+            device.get(CONF_DIY_DPID_MAPPINGS, [])
+        )
+        suggested_diy_controls = _serialize_diy_control_mappings(
+            device.get(CONF_DIY_CONTROL_MAPPINGS, [])
+        )
+        suggested_enable_diy_writes = bool(device.get(CONF_ENABLE_DIY_WRITES))
 
         area_field: Any
         if suggested_area is None:
@@ -955,6 +1197,18 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
                 ): self._build_poll_interval_selector(),
                 vol.Optional(CONF_NAME, default=suggested_name or ""): selector.TextSelector(),
                 area_field: selector.AreaSelector(),
+                vol.Optional(
+                    CONF_DIY_DPID_MAPPINGS,
+                    default=suggested_diy_mappings,
+                ): selector.TextSelector(),
+                vol.Optional(
+                    CONF_DIY_CONTROL_MAPPINGS,
+                    default=suggested_diy_controls,
+                ): selector.TextSelector(),
+                vol.Optional(
+                    CONF_ENABLE_DIY_WRITES,
+                    default=suggested_enable_diy_writes,
+                ): selector.BooleanSelector(),
             }
         )
 
@@ -974,6 +1228,11 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
                 options_schema, sanitized_input
             ),
             errors=errors,
+            description_placeholders={
+                "available_dpids": ", ".join(str(dpid) for dpid in sorted(allowed_dpids)) or "none",
+                "observed_dpids": ", ".join(str(dpid) for dpid in sorted(candidate_dpids)) or "none",
+                "writable_dpids": ", ".join(str(dpid) for dpid in sorted(writable_dpids)) or "none",
+            },
         )
 
     async def _async_step_multi(
@@ -1008,6 +1267,20 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
             )
             raw_area = device_entry.get(CONF_AREA) or device_info.get("location")
             suggested_area = resolve_area_id(self.hass, raw_area)
+            probe_result = await self._async_probe_diy_capabilities(
+                device_info,
+                float(self._multi_timeout),
+            )
+            candidate_dpids = probe_result["candidate_dpids"]
+            writable_dpids = probe_result["writable_dpids"]
+            suggested_diy_mappings = _serialize_diy_dpid_mappings(
+                device_info.get(CONF_DIY_DPID_MAPPINGS, [])
+            )
+            suggested_diy_controls = _serialize_diy_control_mappings(
+                device_info.get(CONF_DIY_CONTROL_MAPPINGS, [])
+            )
+            suggested_enable_diy_writes = bool(device_info.get(CONF_ENABLE_DIY_WRITES))
+            allowed_dpids = probe_result["allowed_dpids"]
 
             if user_input is not None:
                 ip_value = user_input.get("ip", current_ip)
@@ -1015,14 +1288,51 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
                 area_input = prepare_area_value_for_storage(
                     self.hass, user_input.get(CONF_AREA)
                 )
+                diy_mappings_input = user_input.get(CONF_DIY_DPID_MAPPINGS, "")
+                diy_control_input = user_input.get(CONF_DIY_CONTROL_MAPPINGS, "")
+                enable_diy_writes = bool(user_input.get(CONF_ENABLE_DIY_WRITES))
 
                 try:
                     ip_value = _coerce_ip(ip_value)
                 except vol.Invalid:
                     errors["ip"] = "invalid_ip"
 
+                diy_mappings, diy_error = _parse_diy_dpid_mappings(
+                    diy_mappings_input,
+                    candidate_dpids or allowed_dpids,
+                )
+                if diy_error:
+                    errors[CONF_DIY_DPID_MAPPINGS] = diy_error
+
+                diy_control_mappings, diy_control_error = _parse_diy_control_mappings(
+                    diy_control_input,
+                    candidate_dpids or allowed_dpids,
+                    writable_dpids,
+                )
+                if diy_control_error:
+                    errors[CONF_DIY_CONTROL_MAPPINGS] = diy_control_error
+
+                if diy_control_mappings and not enable_diy_writes:
+                    errors[CONF_ENABLE_DIY_WRITES] = "enable_diy_writes_required"
+
+                if diy_mappings and diy_control_mappings:
+                    read_dpids = {item["dpid"] for item in diy_mappings}
+                    control_dpids = {item["dpid"] for item in diy_control_mappings}
+                    if read_dpids & control_dpids:
+                        errors[CONF_DIY_CONTROL_MAPPINGS] = "duplicate_diy_dpid"
+
                 if not errors:
                     updated_device = {**device_info, "ip": ip_value}
+                    if diy_mappings:
+                        updated_device[CONF_DIY_DPID_MAPPINGS] = diy_mappings
+                    else:
+                        updated_device.pop(CONF_DIY_DPID_MAPPINGS, None)
+                    if diy_control_mappings and enable_diy_writes:
+                        updated_device[CONF_DIY_CONTROL_MAPPINGS] = diy_control_mappings
+                        updated_device[CONF_ENABLE_DIY_WRITES] = True
+                    else:
+                        updated_device.pop(CONF_DIY_CONTROL_MAPPINGS, None)
+                        updated_device.pop(CONF_ENABLE_DIY_WRITES, None)
                     result_entry: dict[str, Any] = {"device": updated_device}
                     if name_value:
                         result_entry[CONF_NAME] = name_value
@@ -1035,6 +1345,18 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
             schema_fields: dict[Any, Any] = {
                 vol.Required("ip", default=current_ip): self._build_ip_selector(),
                 vol.Optional(CONF_NAME, default=suggested_name): selector.TextSelector(),
+                vol.Optional(
+                    CONF_DIY_DPID_MAPPINGS,
+                    default=suggested_diy_mappings,
+                ): selector.TextSelector(),
+                vol.Optional(
+                    CONF_DIY_CONTROL_MAPPINGS,
+                    default=suggested_diy_controls,
+                ): selector.TextSelector(),
+                vol.Optional(
+                    CONF_ENABLE_DIY_WRITES,
+                    default=suggested_enable_diy_writes,
+                ): selector.BooleanSelector(),
             }
 
             if suggested_area is None:
@@ -1072,6 +1394,9 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
                 description_placeholders={
                     "progress": progress,
                     "current_device": device_label,
+                    "available_dpids": ", ".join(str(dpid) for dpid in sorted(allowed_dpids)) or "none",
+                    "observed_dpids": ", ".join(str(dpid) for dpid in sorted(candidate_dpids)) or "none",
+                    "writable_dpids": ", ".join(str(dpid) for dpid in sorted(writable_dpids)) or "none",
                 },
             )
 
@@ -1231,10 +1556,13 @@ class CozyLifeOptionsFlow(config_entries.OptionsFlow):
                     errors["base"] = "no_devices_found"
                 else:
                     data = {
-                        "start_ip": start_ip,
-                        "end_ip": end_ip,
                         "timeout": timeout,
-                        "devices": devices,
+                        "devices": flatten_discovery_result(devices),
+                        "scan_settings": {
+                            "start_ip": start_ip,
+                            "end_ip": end_ip,
+                            "timeout": timeout,
+                        },
                     }
                     options_data = {
                         **self.config_entry.options,

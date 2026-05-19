@@ -23,7 +23,11 @@ from .const import (
     DOMAIN,
 )
 from .discovery import discover_devices_via_broadcast
-from .helpers import normalize_area_value, prepare_area_value_for_storage
+from .helpers import (
+    flatten_legacy_devices_payload,
+    normalize_area_value,
+    prepare_area_value_for_storage,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +41,6 @@ def _iter_runtime_clients(entry_data: dict[str, object]):
 
     for runtime_key, collection_key in (
         ("light_runtime", "lights"),
-        ("light_runtime", "switches"),
         ("switch_runtime", "switches"),
         ("sensor_runtime", "entities"),
     ):
@@ -308,19 +311,47 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = dict(entry.data)
     updated = False
 
-    stored_area = normalize_area_value(data.get(CONF_AREA))
-    location_value = normalize_area_value(data.get("location"))
+    def _normalize_area_fields(payload: dict[str, Any]) -> bool:
+        payload_updated = False
 
-    candidate_area = stored_area or location_value
-    normalized_area = prepare_area_value_for_storage(hass, candidate_area)
+        stored_area = normalize_area_value(payload.get(CONF_AREA))
+        location_value = normalize_area_value(payload.get("location"))
+        candidate_area = stored_area or location_value
+        normalized_area = prepare_area_value_for_storage(hass, candidate_area)
 
-    if normalized_area is not None:
-        if data.get(CONF_AREA) != normalized_area:
-            data[CONF_AREA] = normalized_area
-            updated = True
-    elif CONF_AREA in data:
-        data.pop(CONF_AREA)
+        if normalized_area is not None:
+            if payload.get(CONF_AREA) != normalized_area:
+                payload[CONF_AREA] = normalized_area
+                payload_updated = True
+        elif CONF_AREA in payload:
+            payload.pop(CONF_AREA)
+            payload_updated = True
+
+        if "location" in payload:
+            payload.pop("location")
+            payload_updated = True
+
+        return payload_updated
+
+    updated = _normalize_area_fields(data) or updated
+
+    devices_value = data.get("devices")
+    if isinstance(devices_value, list):
+        for device_entry in devices_value:
+            if isinstance(device_entry, dict):
+                updated = _normalize_area_fields(device_entry) or updated
+    elif isinstance(devices_value, dict):
+        data["devices"] = flatten_legacy_devices_payload(devices_value)
+        data["scan_settings"] = {
+            "start_ip": data.pop("start_ip", None),
+            "end_ip": data.pop("end_ip", None),
+            "timeout": data.get("timeout", 0.3),
+        }
         updated = True
+
+        for device_entry in data["devices"]:
+            if isinstance(device_entry, dict):
+                updated = _normalize_area_fields(device_entry) or updated
 
     if updated:
         hass.config_entries.async_update_entry(entry, data=data)

@@ -1,0 +1,3 @@
+Placeholder reference file.
+
+This repository is not currently centered on Nixpacks, but the references folder is kept to reserve a place for durable external references when needed.

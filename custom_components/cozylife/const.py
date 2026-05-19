@@ -9,6 +9,9 @@ DOMAIN = "cozylife"
 MANUFACTURER = "CozyLife"
 
 CONF_AREA = "area"
+CONF_DIY_CONTROL_MAPPINGS = "diy_control_mappings"
+CONF_DIY_DPID_MAPPINGS = "diy_dpid_mappings"
+CONF_ENABLE_DIY_WRITES = "enable_diy_writes"
 CONF_LIGHT_POLL_INTERVAL = "light_poll_interval"
 CONF_SWITCH_POLL_INTERVAL = "switch_poll_interval"
 

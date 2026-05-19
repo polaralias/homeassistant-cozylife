@@ -57,7 +57,7 @@
     "step": {
       "init": {
         "title": "Update CozyLife device",
-        "description": "Adjust the stored connection details or update the friendly name and area.",
+        "description": "Adjust the stored connection details or update the friendly name and area.\n\nDIY mappings are optional and user-defined. They stay outside the repository's supported device surface.\n\nCatalog DPIDs for this device: {available_dpids}.\nObserved live DPIDs that also match the catalog: {observed_dpids}.\nObserved boolean-like DPIDs that can be used for custom writable switches: {writable_dpids}.\n\nRead mappings create custom sensor entities. Format them as `7=Contact Raw, 10=Leak Alarm`.\nWritable mappings require a per-device opt-in and currently support only boolean switches. Format them as `7=switch:bool:Contact Relay`.",
         "data": {
           "start_ip": "Start IP address",
           "end_ip": "End IP address",
@@ -66,7 +66,10 @@
           "light_poll_interval": "Light polling interval (seconds)",
           "switch_poll_interval": "Switch polling interval (seconds)",
           "name": "Device name",
-          "area": "Device area"
+          "area": "Device area",
+          "diy_dpid_mappings": "Custom read mappings",
+          "diy_control_mappings": "Custom writable mappings",
+          "enable_diy_writes": "Enable DIY writes for this device"
         }
       }
     },
@@ -76,7 +79,14 @@
       "no_devices_found": "No CozyLife devices were discovered in this range.",
       "all_devices_configured": "All discovered CozyLife devices are already configured.",
       "invalid_timeout": "Enter a timeout between 0.05 and 10 seconds.",
-      "invalid_poll_interval": "Enter a polling interval between 5 and 600 seconds."
+      "invalid_poll_interval": "Enter a polling interval between 5 and 600 seconds.",
+      "invalid_diy_dpid_mappings": "Enter custom mappings as `dpid=name`, separated by commas or new lines.",
+      "invalid_diy_control_mappings": "Enter writable mappings as `dpid=switch:bool:name`, separated by commas or new lines.",
+      "unsupported_diy_dpid": "Custom mappings can only target DPIDs already known for this device.",
+      "unsupported_diy_write_dpid": "Writable DIY mappings can only target DPIDs observed live on this device with boolean-like values.",
+      "unsupported_diy_control_shape": "The current DIY write path supports only `switch:bool` mappings.",
+      "enable_diy_writes_required": "Enable DIY writes for this device before saving writable custom mappings.",
+      "duplicate_diy_dpid": "A DPID can only be mapped once across custom read and writable mappings."
     }
   }
 }

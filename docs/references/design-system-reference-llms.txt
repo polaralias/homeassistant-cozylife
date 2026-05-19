@@ -1,0 +1,3 @@
+This repository does not currently maintain a frontend design system.
+
+Use this references folder for stable external or local reference material that should not be mixed into architecture or product docs.

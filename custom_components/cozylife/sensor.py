@@ -22,8 +22,20 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import CONF_AREA, DEFAULT_SWITCH_POLL_INTERVAL, DOMAIN, MANUFACTURER
-from .helpers import normalize_area_value, resolve_area_id
+from .const import (
+    CONF_AREA,
+    CONF_DIY_CONTROL_MAPPINGS,
+    CONF_DIY_DPID_MAPPINGS,
+    DEFAULT_SWITCH_POLL_INTERVAL,
+    DOMAIN,
+    MANUFACTURER,
+)
+from .helpers import (
+    normalize_area_value,
+    normalize_diy_control_mappings,
+    normalize_diy_dpid_mappings,
+    resolve_area_id,
+)
 from .tcp_client import tcp_client
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +47,7 @@ class CozyLifeSensorDescription:
 
     key: str
     name: str
-    inferred: bool = False
+    source: str = "raw"
 
 
 class CozyLifeSensorCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -62,13 +74,23 @@ class CozyLifeSensorCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return data
 
 
-def _iter_sensor_devices(data: dict[str, object]) -> list[tuple[dict[str, Any], str | None, str | None]]:
+def _has_diy_mapping(device_info: dict[str, Any]) -> bool:
+    """Return whether the device has normalized DIY DPID mappings."""
+
+    return bool(normalize_diy_dpid_mappings(device_info.get(CONF_DIY_DPID_MAPPINGS)))
+
+
+def _iter_sensor_devices(
+    data: dict[str, object],
+) -> list[tuple[dict[str, Any], str | None, str | None]]:
     """Return the configured CozyLife sensor devices for an entry."""
 
     sensors: list[tuple[dict[str, Any], str | None, str | None]] = []
 
     if device := data.get("device"):
-        if isinstance(device, dict) and device.get("type") == "sensor":
+        if isinstance(device, dict) and (
+            device.get("type") == "sensor" or _has_diy_mapping(device)
+        ):
             sensors.append(
                 (
                     dict(device),
@@ -79,7 +101,9 @@ def _iter_sensor_devices(data: dict[str, object]) -> list[tuple[dict[str, Any], 
     elif isinstance(data.get("devices"), list):
         for item in data["devices"]:
             device_info = item.get("device", {})
-            if not device_info or device_info.get("type") != "sensor":
+            if not device_info or (
+                device_info.get("type") != "sensor" and not _has_diy_mapping(device_info)
+            ):
                 continue
 
             sensors.append(
@@ -103,43 +127,65 @@ def _iter_sensor_devices(data: dict[str, object]) -> list[tuple[dict[str, Any], 
 
 def _build_sensor_descriptions(
     model_name: str | None,
+    device_type: str | None,
     dpids: list[int],
     discovered_keys: set[str],
+    diy_mappings: list[dict[str, Any]],
+    diy_control_mappings: list[dict[str, Any]],
 ) -> list[CozyLifeSensorDescription]:
     """Build entity descriptions for a CozyLife sensor device."""
 
     descriptions: dict[str, CozyLifeSensorDescription] = {}
     name = (model_name or "").lower()
+    include_inferred = device_type == "sensor"
 
-    if "temperature" in name and "humidity" in name:
+    if include_inferred and "temperature" in name and "humidity" in name:
         if 4 in dpids:
-            descriptions["4"] = CozyLifeSensorDescription("4", "Temperature Raw", True)
+            descriptions["4"] = CozyLifeSensorDescription("4", "Temperature Raw", "inferred")
         if 6 in dpids:
-            descriptions["6"] = CozyLifeSensorDescription("6", "Humidity Raw", True)
+            descriptions["6"] = CozyLifeSensorDescription("6", "Humidity Raw", "inferred")
 
-    if "door magnet" in name or "gate magnet" in name:
+    if include_inferred and ("door magnet" in name or "gate magnet" in name):
         if 7 in dpids:
-            descriptions["7"] = CozyLifeSensorDescription("7", "Contact Raw", True)
+            descriptions["7"] = CozyLifeSensorDescription("7", "Contact Raw", "inferred")
 
-    if "motion" in name:
+    if include_inferred and "motion" in name:
         if 6 in dpids:
-            descriptions["6"] = CozyLifeSensorDescription("6", "Motion Raw", True)
+            descriptions["6"] = CozyLifeSensorDescription("6", "Motion Raw", "inferred")
 
-    if "radar" in name:
+    if include_inferred and "radar" in name:
         if 103 in dpids:
-            descriptions["103"] = CozyLifeSensorDescription("103", "Presence Raw", True)
+            descriptions["103"] = CozyLifeSensorDescription("103", "Presence Raw", "inferred")
 
-    if "water sensor" in name and 10 in dpids:
-        descriptions["10"] = CozyLifeSensorDescription("10", "Water Alarm Raw", True)
+    if include_inferred and "water sensor" in name and 10 in dpids:
+        descriptions["10"] = CozyLifeSensorDescription("10", "Water Alarm Raw", "inferred")
 
-    if "smoke sensor" in name and 11 in dpids:
-        descriptions["11"] = CozyLifeSensorDescription("11", "Smoke Alarm Raw", True)
+    if include_inferred and "smoke sensor" in name and 11 in dpids:
+        descriptions["11"] = CozyLifeSensorDescription("11", "Smoke Alarm Raw", "inferred")
 
-    for dpid in sorted({int(key) for key in discovered_keys if str(key).isdigit()} | set(dpids)):
-        key = str(dpid)
-        descriptions.setdefault(
-            key,
-            CozyLifeSensorDescription(key, f"DPID {dpid}", False),
+    observed_dpids = {int(key) for key in discovered_keys if str(key).isdigit()} | set(dpids)
+    controlled_dpids = {
+        int(mapping["dpid"])
+        for mapping in diy_control_mappings
+    }
+
+    if include_inferred:
+        for dpid in sorted(observed_dpids - controlled_dpids):
+            key = str(dpid)
+            descriptions.setdefault(
+                key,
+                CozyLifeSensorDescription(key, f"DPID {dpid}", "raw"),
+            )
+
+    for mapping in diy_mappings:
+        dpid = int(mapping["dpid"])
+        if dpid not in observed_dpids or dpid in controlled_dpids:
+            continue
+
+        descriptions[str(dpid)] = CozyLifeSensorDescription(
+            str(dpid),
+            mapping["name"],
+            "custom",
         )
 
     return list(descriptions.values())
@@ -201,8 +247,11 @@ async def async_setup_entry(
 
         descriptions = _build_sensor_descriptions(
             client._device_model_name,
+            device_info.get("type"),
             [int(dpid) for dpid in client._dpid if isinstance(dpid, int)],
             set(coordinator.data.keys()) if isinstance(coordinator.data, dict) else set(),
+            normalize_diy_dpid_mappings(device_info.get(CONF_DIY_DPID_MAPPINGS)),
+            normalize_diy_control_mappings(device_info.get(CONF_DIY_CONTROL_MAPPINGS)),
         )
 
         if not descriptions:
@@ -304,5 +353,5 @@ class CozyLifeValueSensor(CoordinatorEntity[CozyLifeSensorCoordinator], SensorEn
 
         return {
             "dpid": self._description.key,
-            "mapping": "inferred" if self._description.inferred else "raw",
+            "mapping": self._description.source,
         }

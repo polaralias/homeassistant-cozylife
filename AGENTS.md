@@ -1,27 +1,74 @@
-# Repository Guidelines for Automation and Versioning
+# Repository Operating Guide
 
-- Keep HACS metadata updates manual. When preparing a release, bump the version field in `custom_components/cozylife/manifest.json` explicitly and, if needed, adjust `hacs.json` manually.
-- Do **not** introduce workflows or scripts that automatically commit or push version changes on merge. Follow the standard HACS approach of using Git tags or deliberate commits for versioning.
-# CozyLife Home Assistant Integration Overview
+This file defines how humans and agents should work in this repository.
 
-This repository contains a custom Home Assistant integration for controlling CozyLife smart devices over the local network. The integration is organised around a thin asynchronous layer that orchestrates Home Assistant config entries and entities, while delegating device communication to a synchronous TCP client.
+## Core Rules
 
-## Architecture
-- **Entry point (`custom_components/cozylife/__init__.py`)** – registers the integration, stores per-entry runtime data in `hass.data[DOMAIN]`, and forwards setup/unload calls to the supported platforms (currently `light` and `switch`).
-- **Config flow (`config_flow.py`)** – drives onboarding. It can automatically derive scan ranges from the host network, perform manual range scans, discover compatible devices, and persist the selected device plus metadata (friendly name, location, timeout). Options flow allows tweaking IP, timeout, and labels after setup. Legacy entries created from a full-range scan remain supported.
-- **Platforms (`light.py`, `switch.py`)** – define entity classes that adapt CozyLife devices to Home Assistant platforms. They wrap a per-device TCP client, expose properties such as name, availability, and brightness, and schedule periodic state refreshes via executor jobs because device I/O is blocking.
-- **Discovery helpers (`discovery.py`)** – iterate over an IPv4 range, instantiating `tcp_client` objects to probe each address on port 5555. Devices are classified using the CozyLife type codes (`const.py`) and returned for config-flow selection.
-- **TCP client (`tcp_client.py`)** – implements the proprietary binary-on-JSON protocol used by CozyLife hardware. It opens the TCP socket, requests device metadata, issues state queries, and sends control commands. Device capabilities are resolved against a cached `model.json` catalogue through helpers in `utils.py`.
+- Keep HACS metadata updates manual.
+- When preparing a release, bump `custom_components/cozylife/manifest.json` explicitly.
+- If needed, adjust `hacs.json` explicitly in the same deliberate change.
+- Do not introduce workflows or scripts that automatically commit or push version changes on merge.
+- Prefer standard HACS versioning through manual releases and Git tags.
 
-## Features
-- Automatic and manual LAN discovery of CozyLife lights and switches.
-- Native Home Assistant config/option flows with validation for IP ranges and network timeouts.
-- Support for per-device metadata (name, location) that maps to Home Assistant entity attributes and suggested areas.
-- Periodic polling of device state with graceful handling of offline devices.
-- Local-only communication over TCP port 5555 without relying on cloud services.
+## Documentation Rules
 
-## Implementation Notes
-- Blocking socket calls are isolated to executor jobs (`hass.async_add_executor_job`) to keep Home Assistant's event loop responsive.
-- Device identifiers (`did`), product identifiers (`pid`), and datapoint IDs (`dpid`) discovered via the TCP client are cached in `hass.data` for reuse by platforms.
-- `utils.get_pid_list` reads `model.json` once per runtime, caching the device catalogue in memory to minimise disk I/O and provide device names/icons.
-- Constants in `const.py` centralise device type codes, datapoint IDs, and manufacturer metadata that are shared across modules.
+- Treat existing prose as unverified until it is supported by code or live validation.
+- Treat code as intent, not proof.
+- When documentation states a desired end state, label it clearly as target-state guidance rather than current behavior.
+- Prefer outcome-focused docs over historical narration.
+- When behavior has been validated on real hardware or in a live Home Assistant runtime, record the evidence and date.
+
+## Current Product Frame
+
+This repository is a Home Assistant custom integration for CozyLife devices on the local network.
+
+Current observed scope:
+- config-flow onboarding,
+- local discovery by TCP scan and UDP broadcast assistance,
+- light entities,
+- switch entities,
+- sensor datapoint entities,
+- periodic rediscovery to repair stale device IP addresses.
+
+Current verified support:
+- lights are verified on real hardware,
+- switches and sensors are code-observed but not yet hardware-verified.
+
+Do not use this summary as the primary architecture source. See `ARCHITECTURE.md` and `docs/` for maintained documentation.
+
+## Preferred Documentation Sources
+
+Use these files in this order:
+
+1. `AGENTS.md`
+2. `ARCHITECTURE.md`
+3. `docs/PLANS.md`
+4. `docs/exec-plans/active/implementation-readiness.md`
+5. `docs/RELIABILITY.md`
+6. `docs/SUPPORT.md`
+7. `docs/SECURITY.md`
+8. `docs/design-docs/`
+9. `docs/product-specs/`
+10. `docs/exec-plans/`
+
+Treat `CODEBASE_MAP.md` and `VERIFICATION_AUDIT.md` as dated evidence artifacts, not as the final canonical documentation layer.
+
+## Implementation Session Rules
+
+- When a task asks for code changes with a light prompt, infer the intended behavior from the preferred documentation sources before asking broad clarifying questions.
+- When a task says to use TDD, work in vertical slices against public behavior rather than implementation details.
+- Prefer test seams around:
+  - config-flow onboarding behavior,
+  - discovery and rediscovery behavior,
+  - config-entry normalization and migration behavior,
+  - entity-surface classification and exposure,
+  - protocol client query/control behavior where evidence exists.
+- If the repository lacks a suitable automated harness for the slice you need to change, first add the smallest test harness required to exercise that public behavior.
+- Do not let a missing test harness become an excuse for blind refactoring.
+
+## Change Discipline
+
+- Do not refactor code unless the task explicitly calls for code changes.
+- When documenting bugs or ambiguity, describe the current observed behavior, the desired end state, and the verification status.
+- Keep generated or machine-derived reference output isolated under `docs/generated/`.
+- Keep active planning and debt tracking isolated under `docs/exec-plans/`.
