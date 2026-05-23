@@ -132,6 +132,7 @@ The goal is not just "it works on my LAN." The goal is a public-quality integrat
 
 ## Documentation Map
 
+- [Glossary](GLOSSARY.md)
 - [Architecture](ARCHITECTURE.md)
 - [Plans](docs/PLANS.md)
 - [Reliability](docs/RELIABILITY.md)

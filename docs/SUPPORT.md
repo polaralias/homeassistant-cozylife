@@ -116,7 +116,7 @@ If a physical device in a supported or potentially supported area fails in pract
 ## Related Docs
 
 - `README.md`
-- `CONTEXT.md`
+- `GLOSSARY.md`
 - `docs/product-specs/entity-surface.md`
 - `docs/product-specs/light-device-behavior.md`
 - `docs/generated/parity-gap-register.md`

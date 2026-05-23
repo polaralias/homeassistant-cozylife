@@ -41,15 +41,16 @@ Do not use this summary as the primary architecture source. See `ARCHITECTURE.md
 Use these files in this order:
 
 1. `AGENTS.md`
-2. `ARCHITECTURE.md`
-3. `docs/PLANS.md`
-4. `docs/exec-plans/active/implementation-readiness.md`
-5. `docs/RELIABILITY.md`
-6. `docs/SUPPORT.md`
-7. `docs/SECURITY.md`
-8. `docs/design-docs/`
-9. `docs/product-specs/`
-10. `docs/exec-plans/`
+2. `GLOSSARY.md`
+3. `ARCHITECTURE.md`
+4. `docs/PLANS.md`
+5. `docs/exec-plans/active/implementation-readiness.md`
+6. `docs/RELIABILITY.md`
+7. `docs/SUPPORT.md`
+8. `docs/SECURITY.md`
+9. `docs/design-docs/`
+10. `docs/product-specs/`
+11. `docs/exec-plans/`
 
 Treat `CODEBASE_MAP.md` and `VERIFICATION_AUDIT.md` as dated evidence artifacts, not as the final canonical documentation layer.
 

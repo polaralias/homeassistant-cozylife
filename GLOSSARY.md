@@ -1,6 +1,6 @@
-# CozyLife Integration
+# Glossary
 
-This context describes the product-language and support-language used by this repository.
+This glossary defines the product-language and support-language used by this repository.
 
 The goal is to keep public claims precise while the integration moves from inherited behavior toward verified support.
 
