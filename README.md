@@ -104,6 +104,19 @@ If you have a physical device that falls under a verified or potentially support
 
 ## Installation
 
+### Preferred: HACS
+
+1. Open **HACS -> Integrations**.
+2. Open the three-dot menu and choose **Custom repositories**.
+3. Add this repository URL and choose **Integration**.
+4. Install **CozyLife** from HACS.
+5. Restart Home Assistant.
+6. Open **Settings -> Devices & Services**.
+7. Add the **CozyLife** integration.
+8. Let the integration scan automatically, or provide a custom IP range if required.
+
+### Fallback: Manual
+
 1. Copy `custom_components/cozylife` into your Home Assistant `custom_components` directory.
 2. Restart Home Assistant.
 3. Open **Settings -> Devices & Services**.
