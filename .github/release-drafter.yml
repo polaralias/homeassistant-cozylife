@@ -1,0 +1,56 @@
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
+change-title-escapes: "\\<*_&"
+template: |
+  ## Changes
+
+  $CHANGES
+
+no-changes-template: "- No labeled changes were included in this draft."
+
+categories:
+  - title: "Features"
+    labels:
+      - "feature"
+      - "enhancement"
+      - "feat"
+  - title: "Fixes"
+    labels:
+      - "fix"
+      - "bug"
+      - "bugfix"
+  - title: "Documentation"
+    labels:
+      - "docs"
+  - title: "Maintenance"
+    labels:
+      - "chore"
+      - "refactor"
+      - "test"
+      - "ci"
+
+version-resolver:
+  major:
+    labels:
+      - "breaking"
+      - "major"
+  minor:
+    labels:
+      - "feature"
+      - "enhancement"
+      - "feat"
+  patch:
+    labels:
+      - "fix"
+      - "bug"
+      - "bugfix"
+      - "docs"
+      - "chore"
+      - "refactor"
+      - "test"
+      - "ci"
+  default: patch
+
+exclude-labels:
+  - "skip-release-notes"

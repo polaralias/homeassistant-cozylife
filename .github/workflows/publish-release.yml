@@ -1,0 +1,86 @@
+name: Publish GitHub Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Resolve version metadata
+        id: version
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import pathlib
+
+          manifest = json.loads(
+              pathlib.Path("custom_components/cozylife/manifest.json").read_text(encoding="utf-8")
+          )
+          pathlib.Path("version-metadata.json").write_text(
+              json.dumps(
+                  {
+                      "integration": manifest["domain"],
+                      "version": manifest["version"],
+                      "source": "custom_components/cozylife/manifest.json",
+                  },
+                  indent=2,
+              )
+              + "\n",
+              encoding="utf-8",
+          )
+          PY
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          data = json.load(open("version-metadata.json", encoding="utf-8"))
+          print(f"version={data['version']}")
+          PY
+
+      - name: Validate tag matches manifest version
+        shell: bash
+        run: |
+          expected_tag="v${{ steps.version.outputs.version }}"
+          if [ "${GITHUB_REF_NAME}" != "${expected_tag}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match ${expected_tag}" >&2
+            exit 1
+          fi
+
+      - name: Upload version metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: homeassistant-cozylife-version-metadata
+          path: version-metadata.json
+
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "version-metadata.json#homeassistant-cozylife-version-metadata.json" --clobber
+            gh release edit "$tag" --draft=false --latest --verify-tag --title "$tag"
+          else
+            gh release create "$tag" \
+              "version-metadata.json#homeassistant-cozylife-version-metadata.json" \
+              --verify-tag \
+              --generate-notes \
+              --latest \
+              --title "$tag"
+          fi
