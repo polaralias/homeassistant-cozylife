@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="custom_components/cozylife/brand/logo.png" alt="CozyLife logo" width="320" />
+  <img src="CozyLife%20Banner.png" alt="CozyLife banner" width="960" />
 </p>
 
 # CozyLife For Home Assistant
