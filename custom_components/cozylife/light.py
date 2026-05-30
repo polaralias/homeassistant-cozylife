@@ -35,21 +35,42 @@ ATTR_TRANSITION = light_platform.ATTR_TRANSITION
 ATTR_COLOR_TEMP_KELVIN = getattr(light_platform, "ATTR_COLOR_TEMP_KELVIN", None)
 ATTR_COLOR_TEMP = getattr(light_platform, "ATTR_COLOR_TEMP", None)
 EFFECT_OFF = getattr(light_platform, "EFFECT_OFF", "off")
-
-COLOR_MODE_BRIGHTNESS = light_platform.COLOR_MODE_BRIGHTNESS
-COLOR_MODE_COLOR_TEMP = light_platform.COLOR_MODE_COLOR_TEMP
-COLOR_MODE_HS = light_platform.COLOR_MODE_HS
-COLOR_MODE_ONOFF = light_platform.COLOR_MODE_ONOFF
-COLOR_MODE_WHITE = getattr(light_platform, "COLOR_MODE_WHITE", None)
 LightEntity = light_platform.LightEntity
 
 ColorMode = getattr(light_platform, "ColorMode", None)
-if ColorMode is not None:
-    COLOR_MODE_BRIGHTNESS = ColorMode.BRIGHTNESS
-    COLOR_MODE_COLOR_TEMP = ColorMode.COLOR_TEMP
-    COLOR_MODE_HS = ColorMode.HS
-    COLOR_MODE_ONOFF = ColorMode.ONOFF
-    COLOR_MODE_WHITE = getattr(ColorMode, "WHITE", COLOR_MODE_WHITE)
+
+
+def _resolve_color_mode_values(
+    platform_module: Any,
+) -> tuple[Any, Any, Any, Any, Any]:
+    """Resolve HA light color-mode symbols across API generations."""
+
+    color_mode_enum = getattr(platform_module, "ColorMode", None)
+    if color_mode_enum is not None:
+        return (
+            color_mode_enum.BRIGHTNESS,
+            color_mode_enum.COLOR_TEMP,
+            color_mode_enum.HS,
+            color_mode_enum.ONOFF,
+            getattr(color_mode_enum, "WHITE", None),
+        )
+
+    return (
+        getattr(platform_module, "COLOR_MODE_BRIGHTNESS", "brightness"),
+        getattr(platform_module, "COLOR_MODE_COLOR_TEMP", "color_temp"),
+        getattr(platform_module, "COLOR_MODE_HS", "hs"),
+        getattr(platform_module, "COLOR_MODE_ONOFF", "onoff"),
+        getattr(platform_module, "COLOR_MODE_WHITE", None),
+    )
+
+
+(
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
+    COLOR_MODE_ONOFF,
+    COLOR_MODE_WHITE,
+) = _resolve_color_mode_values(light_platform)
 
 LightEntityFeature = getattr(light_platform, "LightEntityFeature", None)
 if LightEntityFeature is None:

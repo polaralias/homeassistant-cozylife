@@ -44,6 +44,7 @@ The integration scans for compatible CozyLife devices, connects to them locally,
 - Lights are the current verified first-class device class.
 - Some switch and sensor behavior exists in the integration but is not yet validated to the same level across real hardware.
 - Upstream catalog presence does not automatically mean supported behavior in this repo.
+- Release `1.0.1` hardens the light platform against Home Assistant builds that expose `ColorMode` without the older `COLOR_MODE_*` module constants.
 
 ## Documentation
 

@@ -67,6 +67,7 @@ This is capability inference for the verified light surface, not broad support p
 Automated contract coverage now protects this rule:
 - startup DPID capability hints determine supported color modes,
 - refreshed live state determines the active Home Assistant `color_mode`.
+- newer Home Assistant light APIs that expose `ColorMode` without legacy `COLOR_MODE_*` module constants still import and resolve the same CozyLife color-mode contract.
 
 This closes the earlier mismatch where HS-capable lights could initialize in `hs` mode before the first query even when the queried live state was white-mode brightness.
 

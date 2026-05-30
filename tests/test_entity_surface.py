@@ -151,6 +151,16 @@ class _EntityHass:
         return func(*args)
 
 
+class _ColorModeEnum:
+    """Minimal ColorMode enum double for import-compat tests."""
+
+    BRIGHTNESS = "enum_brightness"
+    COLOR_TEMP = "enum_color_temp"
+    HS = "enum_hs"
+    ONOFF = "enum_onoff"
+    WHITE = "enum_white"
+
+
 def _build_light_entity(state: dict[str, int]) -> tuple[light_platform.CozyLifeLight, _MutableStateTcpClient]:
     """Create a live-state light entity test double pair."""
 
@@ -165,6 +175,21 @@ def _build_light_entity(state: dict[str, int]) -> tuple[light_platform.CozyLifeL
     entity.async_write_ha_state = lambda *args, **kwargs: None
     entity._refresh_state()
     return entity, client
+
+
+@pytest.mark.cozylife
+def test_color_mode_resolution_prefers_colormode_enum_when_module_constant_is_missing() -> None:
+    """Modern HA light modules should not require legacy color-mode constants."""
+
+    platform = SimpleNamespace(ColorMode=_ColorModeEnum)
+
+    assert light_platform._resolve_color_mode_values(platform) == (
+        _ColorModeEnum.BRIGHTNESS,
+        _ColorModeEnum.COLOR_TEMP,
+        _ColorModeEnum.HS,
+        _ColorModeEnum.ONOFF,
+        _ColorModeEnum.WHITE,
+    )
 
 
 @pytest.mark.asyncio

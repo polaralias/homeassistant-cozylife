@@ -38,6 +38,11 @@ The repository's parity policy is also explicit:
 - catalog-declared capability sets the parity target,
 - gaps between the two are reliability and/or product-surface findings.
 
+Observed in code and protected by automated tests on `2026-05-30`:
+- the light platform now resolves Home Assistant color-mode symbols through the modern `ColorMode` enum when older module-level `COLOR_MODE_*` constants are absent,
+- this prevents import-time setup failure on newer Home Assistant light APIs,
+- this is API-compatibility evidence, not fresh hardware validation.
+
 ## What Is Not Yet Reliable Enough
 
 - live protocol evidence is still incomplete beyond the tested acknowledgment contract for `set` commands,
