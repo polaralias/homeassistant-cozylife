@@ -13,12 +13,12 @@ The user-facing interface is the Home Assistant integration surface:
 The effective frontend should be:
 - easy to onboard,
 - predictable about what will be created,
-- transparent about scan behavior,
+- transparent about scan behaviour,
 - clear about names, areas, and supported entity types.
 
 ## Current UX Risks
 
-- switch-class devices are currently modeled ambiguously in code,
+- switch-class devices are currently modelled ambiguously in code,
 - legacy entry support increases configuration complexity,
 - the repo has not yet documented the expected UX for sensors in a user-facing way.
 

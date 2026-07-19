@@ -5,7 +5,7 @@ Status: Active
 ## Objective
 
 Turn inherited analysis into a durable documentation system that separates:
-- current verified behavior,
+- current verified behaviour,
 - desired end state,
 - active technical debt,
 - execution plans.
@@ -21,7 +21,7 @@ The harness must also make future implementation sessions intelligible from the 
 - reliability and security posture docs,
 - active debt tracker,
 - explicit evidence bar for promoting device classes into supported status.
-- explicit catalog provenance and CI policy for upstream snapshot drift.
+- explicit catalogue provenance and CI policy for upstream snapshot drift.
 
 ## Exit Criteria
 

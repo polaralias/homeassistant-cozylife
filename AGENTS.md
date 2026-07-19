@@ -14,9 +14,9 @@ This file defines how humans and agents should work in this repository.
 
 - Treat existing prose as unverified until it is supported by code or live validation.
 - Treat code as intent, not proof.
-- When documentation states a desired end state, label it clearly as target-state guidance rather than current behavior.
-- Prefer outcome-focused docs over historical narration.
-- When behavior has been validated on real hardware or in a live Home Assistant runtime, record the evidence and date.
+- When documentation states a desired end state, label it clearly as target-state guidance rather than current behaviour.
+- Prefer outcome-focussed docs over historical narration.
+- When behaviour has been validated on real hardware or in a live Home Assistant runtime, record the evidence and date.
 
 ## Current Product Frame
 
@@ -52,25 +52,25 @@ Use these files in this order:
 10. `docs/product-specs/`
 11. `docs/exec-plans/`
 
-Treat `CODEBASE_MAP.md` and `VERIFICATION_AUDIT.md` as dated evidence artifacts, not as the final canonical documentation layer.
+Treat `CODEBASE_MAP.md` and `VERIFICATION_AUDIT.md` as dated evidence artefacts, not as the final canonical documentation layer.
 
 ## Implementation Session Rules
 
-- When a task asks for code changes with a light prompt, infer the intended behavior from the preferred documentation sources before asking broad clarifying questions.
-- When a task says to use TDD, work in vertical slices against public behavior rather than implementation details.
+- When a task asks for code changes with a light prompt, infer the intended behaviour from the preferred documentation sources before asking broad clarifying questions.
+- When a task says to use TDD, work in vertical slices against public behaviour rather than implementation details.
 - Prefer test seams around:
-  - config-flow onboarding behavior,
-  - discovery and rediscovery behavior,
-  - config-entry normalization and migration behavior,
+  - config-flow onboarding behaviour,
+  - discovery and rediscovery behaviour,
+  - config-entry normalisation and migration behaviour,
   - entity-surface classification and exposure,
-  - protocol client query/control behavior where evidence exists.
-- If the repository lacks a suitable automated harness for the slice you need to change, first add the smallest test harness required to exercise that public behavior.
+  - protocol client query/control behaviour where evidence exists.
+- If the repository lacks a suitable automated harness for the slice you need to change, first add the smallest test harness required to exercise that public behaviour.
 - Do not let a missing test harness become an excuse for blind refactoring.
 
 ## Change Discipline
 
 - Do not refactor code unless the task explicitly calls for code changes.
-- When documenting bugs or ambiguity, describe the current observed behavior, the desired end state, and the verification status.
+- When documenting bugs or ambiguity, describe the current observed behaviour, the desired end state, and the verification status.
 - Keep generated or machine-derived reference output isolated under `docs/generated/`.
 - Keep active planning and debt tracking isolated under `docs/exec-plans/`.
 

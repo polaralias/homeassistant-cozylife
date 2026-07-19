@@ -20,5 +20,5 @@ A user should be able to:
 
 ## Implications
 
-- local discovery and reconnect behavior are tier-one engineering concerns,
-- cloud behavior should only appear in docs as contextual caution unless verified.
+- local discovery and reconnect behaviour are tier-one engineering concerns,
+- cloud behaviour should only appear in docs as contextual caution unless verified.

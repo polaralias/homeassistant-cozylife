@@ -18,7 +18,7 @@ Ready when:
 - root docs no longer repeat invalidated claims,
 - support policy has one canonical home,
 - architecture, reliability, security, and support language agree,
-- archaeology outputs are clearly marked as evidence artifacts rather than canon.
+- archaeology outputs are clearly marked as evidence artefacts rather than canon.
 
 Current state:
 - largely in place,
@@ -30,7 +30,7 @@ Ready when:
 - support labels are explicit,
 - evidence bar is explicit,
 - contributor promotion path is explicit,
-- unsupported but available code paths are clearly labeled.
+- unsupported but available code paths are clearly labelled.
 
 Current state:
 - in place through `docs/SUPPORT.md` and related docs.
@@ -58,7 +58,7 @@ Current state:
 - lights are first-class supported by policy and prior real-world use,
 - the seeded parity register entry now includes explicit current-state reversible brightness control evidence from `2026-05-17`.
 
-### 5. Catalog Governance
+### 5. Catalogue Governance
 
 Ready when:
 - upstream provenance for `model.json` is documented,
@@ -73,7 +73,7 @@ Current state:
 
 Ready when:
 - the repository has one intentional policy per device class,
-- drift such as switch-as-light compatibility behavior is either removed or explicitly justified,
+- drift such as switch-as-light compatibility behaviour is either removed or explicitly justified,
 - user-facing entity expectations are predictable.
 
 Current state:
@@ -83,21 +83,21 @@ Current state:
 ### 7. Refactor Safety
 
 Ready when:
-- canonical docs describe desired behavior,
+- canonical docs describe desired behaviour,
 - major truth mismatches are named,
 - parity gaps are tracked,
 - support policy is stable enough that code changes can target explicit outcomes.
 
 Current state:
 - materially improved,
-- ready for focused implementation work, not yet for large blind refactors.
+- ready for focussed implementation work, not yet for large blind refactors.
 
 ### 8. TDD Readiness
 
 Ready when:
 - a minimal automated test harness exists in-tree,
-- new work can start from one public-behavior test slice rather than a rediscovery pass,
-- tests can target documented product behavior without overfitting to helper internals.
+- new work can start from one public-behaviour test slice rather than a rediscovery pass,
+- tests can target documented product behaviour without overfitting to helper internals.
 
 Current state:
 - documentation is ready enough to guide TDD,
@@ -109,8 +109,8 @@ The repository is ready for public-facing iteration when:
 - documentation truth is stable,
 - support policy is canonical,
 - one supported model has explicit current-state evidence,
-- unsupported classes are clearly labeled,
-- upstream catalog drift is visible or at least documented as managed debt.
+- unsupported classes are clearly labelled,
+- upstream catalogue drift is visible or at least documented as managed debt.
 
 ## Practical Gate For Expanding Support
 

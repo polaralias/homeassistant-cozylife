@@ -1,11 +1,11 @@
 # Tested But Not Confirmed
 
-This document tracks capability findings that have been exercised on real hardware but are not yet confirmed strongly enough to expose as product behavior or Home Assistant entities.
+This document tracks capability findings that have been exercised on real hardware but are not yet confirmed strongly enough to expose as product behaviour or Home Assistant entities.
 
 Use this category when all of the following are true:
 
 - the repository has real-hardware evidence,
-- the behavior is not yet semantically stable enough to claim publicly,
+- the behaviour is not yet semantically stable enough to claim publicly,
 - the current integration does not expose it as a first-class surface,
 - more protocol or product interpretation work is still required.
 
@@ -19,9 +19,9 @@ Those are product-support labels. This document is an evidence register for ambi
 
 ## Current Entries
 
-### `rju4K7` unknown catalog DPIDs
+### `rju4K7` unknown catalogue DPIDs
 
-Source artifacts:
+Source artefacts:
 
 - `docs/generated/rju4k7-live-validation-2026-05-19.md`
 - `docs/generated/rju4k7-unknown-dpid-probe-2026-05-19.md`
@@ -39,12 +39,12 @@ Current evidence:
 - other tested values did not yield a stable query-surface effect
 
 Current interpretation:
-- likely related to delayed off, timer behavior, or a closely related shutdown control
+- likely related to delayed off, timer behaviour, or a closely related shutdown control
 - not yet semantically confirmed enough to expose in product docs or Home Assistant
 
 Why not exposed:
 - the broader contract is still unknown
-- the behavior has only been verified on one PID and one inferred semantic path
+- the behaviour has only been verified on one PID and one inferred semantic path
 - the repository has not yet chosen a user-facing representation for it
 
 #### DPID `44`
@@ -80,13 +80,13 @@ Current interpretation:
 - may require different value domains, stronger mode gating, or may not be directly writable
 
 Why not exposed:
-- no successful or semantically meaningful live behavior has been established
+- no successful or semantically meaningful live behaviour has been established
 
 ## Repository Rule
 
 Do not expose a tested-but-not-confirmed capability in product docs or Home Assistant unless:
 
 - the semantic meaning is stable enough to describe clearly,
-- the behavior is reproducible,
+- the behaviour is reproducible,
 - the repository can explain how it should appear to users,
 - the support and parity docs are updated in the same session.
