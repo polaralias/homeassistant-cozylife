@@ -26,25 +26,25 @@ Observed on `2026-05-17`:
 
 Observed on `2026-05-19`:
 - the repository exercised the full repo-defined verified light surface on real hardware,
-- on/off, brightness, color temperature, HS color, `sleep`, `warm`, `study`, and `chrismas` all succeeded,
-- brightness, color-temperature, and HS transition paths also succeeded after transition-path repair,
+- on/off, brightness, colour temperature, HS colour, `sleep`, `warm`, `study`, and `chrismas` all succeeded,
+- brightness, colour-temperature, and HS transition paths also succeeded after transition-path repair,
 - the original state was restored and confirmed by query at the end of the full pass.
 
 The repository's support policy is stricter than simple reachability:
-- a class is only fully supported when relevant control behavior is also verified on real hardware.
+- a class is only fully supported when relevant control behaviour is also verified on real hardware.
 
 The repository's parity policy is also explicit:
-- live behavior determines support truth,
-- catalog-declared capability sets the parity target,
+- live behaviour determines support truth,
+- catalogue-declared capability sets the parity target,
 - gaps between the two are reliability and/or product-surface findings.
 
 ## What Is Not Yet Reliable Enough
 
-- live protocol evidence is still incomplete beyond the tested acknowledgment contract for `set` commands,
-- the TCP client now has automated coverage for fragmented `\r\n`-terminated responses, but longer-session framing behavior is still not live-verified,
+- live protocol evidence is still incomplete beyond the tested acknowledgement contract for `set` commands,
+- the TCP client now has automated coverage for fragmented `\r\n`-terminated responses, but longer-session framing behaviour is still not live-verified,
 - response correlation is now tested against exact top-level `sn` matching, but longer-session protocol evidence is still incomplete,
 - switch reliability has not been validated on real hardware,
-- long-running reconnect behavior has not been measured.
+- long-running reconnect behaviour has not been measured.
 
 ## Reliability Principles
 
@@ -56,6 +56,6 @@ The repository's parity policy is also explicit:
 ## Next Reliability Work
 
 - capture live protocol transcripts for info, query, and control,
-- verify behavior after device IP changes,
-- verify behavior after temporary loss of power or Wi-Fi,
-- verify polling behavior over longer sessions.
+- verify behaviour after device IP changes,
+- verify behaviour after temporary loss of power or Wi-Fi,
+- verify polling behaviour over longer sessions.

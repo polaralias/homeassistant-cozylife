@@ -5,7 +5,7 @@ This document is the second pass after `CODEBASE_MAP.md`.
 Scope:
 - trace the protocol assumptions that the code currently makes,
 - clarify the actual Home Assistant entity surface implied by the code,
-- separate code-observed behavior from behavior that still requires runtime verification.
+- separate code-observed behaviour from behaviour that still requires runtime verification.
 
 This is still analysis only. No refactor is proposed here.
 
@@ -13,7 +13,7 @@ This is still analysis only. No refactor is proposed here.
 
 - `Observed`: directly supported by repository code.
 - `Inferred`: likely intent based on code structure, but not guaranteed correct.
-- `Unverified`: depends on actual Home Assistant runtime behavior or real CozyLife hardware.
+- `Unverified`: depends on actual Home Assistant runtime behaviour or real CozyLife hardware.
 
 ## Protocol Surface
 
@@ -31,8 +31,8 @@ Observed payload patterns:
 
 Observed response expectations:
 - `_device_info()` expects a single JSON message with `msg.did` and `msg.pid`.
-- `query()` expects a response whose serialized bytes contain the same `sn` and whose decoded JSON contains `msg.data`.
-- `control()` does not wait for a response body or acknowledgment payload.
+- `query()` expects a response whose serialised bytes contain the same `sn` and whose decoded JSON contains `msg.data`.
+- `control()` does not wait for a response body or acknowledgement payload.
 
 Code anchors:
 - command constants at `custom_components/cozylife/tcp_client.py:14`
@@ -45,7 +45,7 @@ Code anchors:
 
 The integration does not learn device capabilities from the device alone.
 
-Observed behavior:
+Observed behaviour:
 - the device reports `did` and `pid`,
 - the client uses `pid` to search `model.json`,
 - the first matching entry provides:
@@ -61,7 +61,7 @@ Code anchors:
 
 ## Protocol Assumptions That Are Not Yet Verified
 
-### 1. Control success is inferred from socket state, not from device acknowledgment
+### 1. Control success is inferred from socket state, not from device acknowledgement
 
 Observed:
 - `control()` returns `self._connect is not None`.
@@ -124,7 +124,7 @@ Verification need:
 
 ## Discovery Contract
 
-### Observed discovery behavior
+### Observed discovery behaviour
 
 The integration uses two discovery routes:
 - UDP broadcast on port `6095` to gather candidate IPs,
@@ -178,7 +178,7 @@ Observed creation paths:
 - multi-device entry path at `custom_components/cozylife/switch.py:76`
 - legacy path at `custom_components/cozylife/switch.py:119`
 
-### Conclusion: switch devices are currently dual-modeled
+### Conclusion: switch devices are currently dual-modelled
 
 Observed:
 - a switch-class device can produce a `light` domain entity and a `switch` domain entity from the same physical device.
@@ -193,14 +193,14 @@ Implications:
 Confidence:
 - `Observed`
 
-## Light Behavior Audit
+## Light Behaviour Audit
 
 ### Observed control datapoints
 
 The main light control path actively uses these DPID-like payload keys:
 - `1`: power
 - `2`: work mode / effect mode
-- `3`: color temperature
+- `3`: colour temperature
 - `4`: brightness
 - `5`: hue
 - `6`: saturation
@@ -229,28 +229,28 @@ Notes:
 - `chrismas` is spelled that way in both code and service metadata.
 - the effect implementation is uneven:
   - `chrismas` uses a hard-coded raw payload,
-  - the other effects write simple brightness and color-temperature values.
+  - the other effects write simple brightness and colour-temperature values.
 
 ### Observed light capability inference
 
-The light entity decides supported color modes from the stored `dpid` list:
-- `3` implies color temperature mode
+The light entity decides supported colour modes from the stored `dpid` list:
+- `3` implies colour temperature mode
 - `4` implies brightness
-- `5` or `6` implies HS color
+- `5` or `6` implies HS colour
 
 Code anchor:
 - `custom_components/cozylife/light.py:456`
 
 Interpretation:
-- capability modeling is catalogue-driven, not probed dynamically from live device state.
+- capability modelling is catalogue-driven, not probed dynamically from live device state.
 
 ## Sensor Surface Audit
 
-### Observed sensor modeling
+### Observed sensor modelling
 
 The sensor implementation is intentionally generic.
 
-Observed behavior:
+Observed behaviour:
 - one coordinator per physical sensor device,
 - one HA entity per discovered or catalogued DPID,
 - inferred friendly names only for a small subset of device-name patterns,
@@ -262,14 +262,14 @@ Code anchors:
 - generic fallback at `custom_components/cozylife/sensor.py:138`
 
 Interpretation:
-- sensor support exists, but the current public surface is a diagnostic/raw-data surface rather than a strongly modeled Home Assistant integration.
+- sensor support exists, but the current public surface is a diagnostic/raw-data surface rather than a strongly modelled Home Assistant integration.
 
 ## Documentation Drift Confirmed
 
 Observed README claims that are now questionable or incorrect:
 - it claims automated HACS metadata updates as a feature,
 - it describes “Async I/O everywhere,”
-- it emphasizes lights and switches while the runtime now also loads sensors.
+- it emphasises lights and switches while the runtime now also loads sensors.
 
 Code and repo evidence:
 - no `.github` workflow directory exists,
@@ -288,7 +288,7 @@ High confidence from code:
 - config flow is the intended onboarding path,
 - discovery combines range scanning and broadcast discovery,
 - `model.json` is operationally important,
-- switch devices are currently modeled in more than one HA domain,
+- switch devices are currently modelled in more than one HA domain,
 - protocol correctness is only partially enforced by the client.
 
 Low confidence until runtime verification:
@@ -296,7 +296,7 @@ Low confidence until runtime verification:
 - whether effect payloads are correct beyond the author’s original hardware,
 - whether sensor DPID naming is accurate,
 - whether the TCP parser is robust under real network conditions,
-- whether dual-modeled switches behave acceptably in Home Assistant UI and automation flows.
+- whether dual-modelled switches behave acceptably in Home Assistant UI and automation flows.
 
 ## Suggested Next Verification Session
 

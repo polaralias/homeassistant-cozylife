@@ -18,7 +18,7 @@ A device surface is `supported` when:
 - it has been validated on real hardware,
 - discovery succeeds,
 - query succeeds,
-- relevant control behavior succeeds,
+- relevant control behaviour succeeds,
 - the repository is willing to claim it publicly as a first-class surface.
 
 ### Partially Supported
@@ -30,7 +30,7 @@ A device surface is `partially supported` when:
 ### Potentially Supported
 
 A device surface is `potentially supported` when:
-- the repository can plausibly classify or operate it from code and catalog data,
+- the repository can plausibly classify or operate it from code and catalogue data,
 - but it has not yet been validated on real hardware to the repository evidence bar.
 
 ## Evidence Bar
@@ -51,11 +51,11 @@ Promotion into `partially supported` requires:
 
 ## Truth Rules
 
-- live device behavior determines support truth,
+- live device behaviour determines support truth,
 - `custom_components/cozylife/model.json` is the closest provider-level capability declaration,
-- `model.json` is a catalog snapshot, not a support contract,
-- mismatches between live behavior and `model.json` should be documented as parity gaps,
-- support and parity should be tracked first per concrete model/PID, then summarized by class when useful.
+- `model.json` is a catalogue snapshot, not a support contract,
+- mismatches between live behaviour and `model.json` should be documented as parity gaps,
+- support and parity should be tracked first per concrete model/PID, then summarised by class when useful.
 
 ## Current Repository Position
 
@@ -72,7 +72,7 @@ Promotion into `partially supported` requires:
 - current label: `potentially supported`
 - basis:
   - code paths exist,
-  - catalog data exists,
+  - catalogue data exists,
   - no repository-grade real-hardware validation yet
 
 ### Sensors
@@ -80,7 +80,7 @@ Promotion into `partially supported` requires:
 - current label: `potentially supported`
 - basis:
   - code paths exist,
-  - catalog data exists,
+  - catalogue data exists,
   - no repository-grade real-hardware validation yet
 
 ### Unknown devices
@@ -90,16 +90,16 @@ Promotion into `partially supported` requires:
   - the config flow may still discover and store them,
   - the current repository does not provide a default first-class entity platform for `unknown` devices,
   - users may opt into read-only DIY DPID mappings that expose custom sensor entities,
-  - users may also opt into narrowly constrained per-device DIY writable boolean switch mappings for observed catalog-backed DPIDs,
+  - users may also opt into narrowly constrained per-device DIY writable boolean switch mappings for observed catalogue-backed DPIDs,
   - those DIY mappings remain user-defined and are not evidence of repository-supported semantics
 
 ## Contributor Path
 
 If you want to promote a device class or model into stronger support:
 - test on real hardware,
-- capture discovery behavior,
-- capture query behavior,
-- capture control behavior,
+- capture discovery behaviour,
+- capture query behaviour,
+- capture control behaviour,
 - identify the concrete model/PID,
 - document parity gaps against `model.json`,
 - submit the evidence with the change.
@@ -107,9 +107,9 @@ If you want to promote a device class or model into stronger support:
 If a physical device in a supported or potentially supported area fails in practice, open an issue with:
 - device identification details,
 - model name and PID if known,
-- discovery behavior,
-- query behavior,
-- control behavior,
+- discovery behaviour,
+- query behaviour,
+- control behaviour,
 - the observed Home Assistant entity surface,
 - logs, quirks, or constraints that narrow the failure.
 

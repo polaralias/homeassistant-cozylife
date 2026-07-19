@@ -16,7 +16,7 @@ The ideal user outcome is:
 - Do not claim support wider than verified support.
 - Do not let legacy compatibility dominate the main user story.
 - Do not hide reliability limits.
-- Prefer fewer, clearer entity behaviors over more surprising ones.
+- Prefer fewer, clearer entity behaviours over more surprising ones.
 - Do not promote a device class into supported status without contributor evidence from real hardware.
 - State the evidence bar plainly when claiming a class is supported.
 - Use partial support labels when a device works on real hardware but not all expected controls in the class are verified.
@@ -24,5 +24,5 @@ The ideal user outcome is:
 ## Current Product Risks
 
 - the current entity surface is not fully coherent,
-- runtime behavior has been partially verified on a live light but not on switches or sensors,
+- runtime behaviour has been partially verified on a live light but not on switches or sensors,
 - the old README included claims that were stronger than current evidence.

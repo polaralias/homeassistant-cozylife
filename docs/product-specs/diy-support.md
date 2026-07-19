@@ -6,12 +6,12 @@ A user with unsupported or partially understood CozyLife hardware should have a 
 
 ## Current State
 
-Current repository behavior:
+Current repository behaviour:
 
 - users can add discovered `light`, `switch`, `sensor`, and `unknown` devices through config flow,
 - only `light`, `switch`, and `sensor` have first-class runtime platforms,
 - the sensor platform already exposes raw datapoints when a device is classified as a sensor,
-- tested-but-not-confirmed DPID behavior is recorded in generated evidence docs but not exposed as product behavior.
+- tested-but-not-confirmed DPID behaviour is recorded in generated evidence docs but not exposed as product behaviour.
 
 ## Proposed Scope
 
@@ -19,13 +19,13 @@ The first useful DIY support target should be:
 
 - custom raw DPID mappings on a per-device basis
 - read-oriented first
-- focused on observed query datapoints
+- focussed on observed query datapoints
 
 Current implemented slice:
 
 - custom read mappings for observed/catalog-backed DPIDs
 - custom writable mappings only for explicitly opted-in per-device boolean switch DPIDs
-- writable candidates constrained to DPIDs that are both observed in live query data and present in the stored catalog-backed DPID list for the device
+- writable candidates constrained to DPIDs that are both observed in live query data and present in the stored catalogue-backed DPID list for the device
 
 Example outcome:
 
@@ -38,12 +38,12 @@ Example outcome:
 
 - arbitrary write support for undocumented DPIDs
 - claiming custom mappings are repository-supported semantics
-- automatic inference that a custom mapping should become default product behavior
+- automatic inference that a custom mapping should become default product behaviour
 - generic writable number, select, or button synthesis without further evidence and design work
 
 ## Product Labels
 
-DIY-mapped behavior should be labeled as:
+DIY-mapped behaviour should be labelled as:
 
 - custom
 - user-defined

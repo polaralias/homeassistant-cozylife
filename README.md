@@ -42,8 +42,8 @@ The integration scans for compatible CozyLife devices, connects to them locally,
 ## Support Notes
 
 - Lights are the current verified first-class device class.
-- Some switch and sensor behavior exists in the integration but is not yet validated to the same level across real hardware.
-- Upstream catalog presence does not automatically mean supported behavior in this repo.
+- Some switch and sensor behaviour exists in the integration but is not yet validated to the same level across real hardware.
+- Upstream catalogue presence does not automatically mean supported behaviour in this repo.
 
 ## Documentation
 
@@ -53,4 +53,4 @@ Start with:
 - [ARCHITECTURE.md](ARCHITECTURE.md)
 - [docs/RELIABILITY.md](docs/RELIABILITY.md)
 
-For repository workflow, evidence discipline, and agent-focused context, read [AGENTS.md](AGENTS.md).
+For repository workflow, evidence discipline, and agent-focussed context, read [AGENTS.md](AGENTS.md).

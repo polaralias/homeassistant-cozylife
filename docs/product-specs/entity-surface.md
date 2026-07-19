@@ -30,10 +30,10 @@ A user should be able to predict which Home Assistant entities a CozyLife device
 
 ## Product Requirement
 
-The repository should only promote a class into supported product behavior when it has:
+The repository should only promote a class into supported product behaviour when it has:
 - real hardware verification to the repository evidence bar,
 - a canonical entity mapping,
-- documented exceptions if compatibility behavior remains.
+- documented exceptions if compatibility behaviour remains.
 
 Minimum contributor evidence for promotion:
 - real hardware identification,
@@ -51,10 +51,10 @@ Partial-support policy:
 - if a device class works on real hardware but only a subset of expected controls are verified, document it as partially supported rather than supported.
 
 Capability-parity policy:
-- live device behavior determines support truth,
+- live device behaviour determines support truth,
 - `model.json` is the closest provider-level declaration of expected capability,
-- differences between live behavior and `model.json` should be recorded as parity gaps rather than silently ignored,
-- parity gaps should be tracked first per concrete model/PID and only then summarized by class.
+- differences between live behaviour and `model.json` should be recorded as parity gaps rather than silently ignored,
+- parity gaps should be tracked first per concrete model/PID and only then summarised by class.
 
 Until then:
 - lights are supported,
