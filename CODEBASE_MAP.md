@@ -1,3 +1,18 @@
+---
+type: "Architecture Concept"
+title: "CozyLife Codebase Map"
+description: "Documents CozyLife Codebase Map for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - architecture-concept
+navigation:
+  role: foundational
+  order: 20
+---
 # CozyLife Codebase Map
 
 This document maps the repository as it exists today.
@@ -24,7 +39,7 @@ The project is not a general CozyLife platform today. It includes a broad static
 - There are no tests in the repo.
 - There is no `.github` workflow directory.
 - The code is concentrated in `custom_components/cozylife/`.
-- README claims some behavior that the repo instructions now reject, especially automated HACS versioning.
+- README claims some behaviour that the repo instructions now reject, especially automated HACS versioning.
 - Runtime support is broader than the original docs imply because `sensor.py` is now present and loaded.
 
 ## Top-Level Layout
@@ -32,7 +47,7 @@ The project is not a general CozyLife platform today. It includes a broad static
 - `README.md`: user-facing setup and historical notes. Contains drift and should not be treated as authoritative.
 - `hacs.json`: HACS metadata.
 - `custom_components/cozylife/manifest.json`: Home Assistant manifest and version metadata.
-- `custom_components/cozylife/__init__.py`: integration entry setup, runtime state normalization, periodic rediscovery.
+- `custom_components/cozylife/__init__.py`: integration entry setup, runtime state normalisation, periodic rediscovery.
 - `custom_components/cozylife/config_flow.py`: onboarding and options flow. This is the largest control surface.
 - `custom_components/cozylife/discovery.py`: TCP range scan and UDP broadcast-assisted discovery.
 - `custom_components/cozylife/tcp_client.py`: synchronous protocol client for CozyLife hardware.
@@ -40,7 +55,7 @@ The project is not a general CozyLife platform today. It includes a broad static
 - `custom_components/cozylife/switch.py`: switch entities.
 - `custom_components/cozylife/sensor.py`: raw datapoint sensor entities using a coordinator.
 - `custom_components/cozylife/utils.py`: model catalogue loader and serial number helper.
-- `custom_components/cozylife/helpers.py`: area normalization and lookup helpers.
+- `custom_components/cozylife/helpers.py`: area normalisation and lookup helpers.
 - `custom_components/cozylife/model.json`: static CozyLife product catalogue used to map `pid` to model metadata and datapoints.
 
 ## Runtime Architecture
@@ -50,13 +65,13 @@ The project is not a general CozyLife platform today. It includes a broad static
 `custom_components/cozylife/__init__.py` is the runtime root.
 
 It does three things:
-- normalizes stored config-entry data into a runtime shape,
+- normalises stored config-entry data into a runtime shape,
 - forwards setup to the `light`, `switch`, and `sensor` platforms,
 - runs periodic broadcast rediscovery to repair stale IP addresses.
 
 Key anchors:
 - platforms declared at `custom_components/cozylife/__init__.py:30`
-- entry normalization at `custom_components/cozylife/__init__.py:191`
+- entry normalisation at `custom_components/cozylife/__init__.py:191`
 - rediscovery loop at `custom_components/cozylife/__init__.py:124`
 
 ### 2. Config entry shapes
@@ -81,7 +96,7 @@ The setup path in `__init__.py` explicitly preserves support for all three.
 
 ### 3. Runtime state in `hass.data`
 
-Each config entry is normalized into `hass.data[DOMAIN][entry_id]` with a mixed runtime/config shape that may contain:
+Each config entry is normalised into `hass.data[DOMAIN][entry_id]` with a mixed runtime/config shape that may contain:
 - `device` or `devices`
 - `timeout`
 - `scan_settings`
@@ -135,14 +150,14 @@ Observed workflow:
 4. Flow runs broadcast discovery and TCP scans.
 5. Already-configured devices are filtered out.
 6. User selects one or more devices.
-7. User customizes name and area for each selected device.
+7. User customises name and area for each selected device.
 8. The flow creates single-device entries by re-entering through `async_step_import`.
 
 Key anchors:
 - initial user step at `custom_components/cozylife/config_flow.py:137`
 - discovery and filtering at `custom_components/cozylife/config_flow.py:307`
 - multi-select step at `custom_components/cozylife/config_flow.py:464`
-- per-device customization at `custom_components/cozylife/config_flow.py:537`
+- per-device customisation at `custom_components/cozylife/config_flow.py:537`
 - import-based entry creation at `custom_components/cozylife/config_flow.py:625`
 - options flow start at `custom_components/cozylife/config_flow.py:836`
 
@@ -154,11 +169,11 @@ Important interpretation:
 
 `light.py` handles both real lights and a second entity type: a switch represented as a light.
 
-Real light behavior includes:
+Real light behaviour includes:
 - on/off,
 - brightness,
-- color temperature,
-- HS color,
+- colour temperature,
+- HS colour,
 - several named effects,
 - custom transition logic.
 
@@ -171,7 +186,7 @@ Key anchors:
 - turn-off transition path at `custom_components/cozylife/light.py:750`
 
 Important interpretation:
-- This file contains the most bespoke device behavior.
+- This file contains the most bespoke device behaviour.
 - It also contains the most product-specific assumptions.
 - It is the main place where “works for my bulbs” logic seems to live.
 
@@ -206,7 +221,7 @@ Key anchors:
 - entity class at `custom_components/cozylife/sensor.py:245`
 
 Important interpretation:
-- Sensor support exists, but it is mostly raw datapoint exposure, not polished domain modeling.
+- Sensor support exists, but it is mostly raw datapoint exposure, not polished domain modelling.
 
 ## Static Device Catalogue
 
@@ -215,7 +230,7 @@ Important interpretation:
 Observed facts:
 - It contains `11` top-level device type groups.
 - The sample catalogue includes many categories beyond lights, switches, and sensors.
-- The active Home Assistant integration only recognizes CozyLife type codes:
+- The active Home Assistant integration only recognises CozyLife type codes:
   - `00` switch
   - `01` light
   - `03` sensor
@@ -244,7 +259,7 @@ There are two polling styles in the codebase:
 - `light.py` and `switch.py` use manual `async_track_time_interval`
 - `sensor.py` uses `DataUpdateCoordinator`
 
-This means the codebase has two different synchronization models for device state.
+This means the codebase has two different synchronisation models for device state.
 
 ### Rediscovery path
 
@@ -265,7 +280,7 @@ This is the clearest evidence that the intended end state is “local discovery 
 - Preservation of legacy entries while evolving the data model.
 - Local-only operation over TCP.
 - Device metadata lookup through `model.json`.
-- Poll interval customization in the options flow.
+- Poll interval customisation in the options flow.
 - Device area support tied to Home Assistant area registry.
 - Automatic recovery from device IP changes.
 
@@ -276,7 +291,7 @@ This is the clearest evidence that the intended end state is “local discovery 
 - `light.py` contains older-style custom transition and effect logic with many hard-coded payload assumptions.
 - Sensor entities are mostly raw datapoints, not semantically typed Home Assistant entities.
 - The device catalogue is broad, but the supported Home Assistant entity model is narrow.
-- The repo has no test harness to verify behavior against Home Assistant or device protocol changes.
+- The repo has no test harness to verify behaviour against Home Assistant or device protocol changes.
 
 ## Highest-Value Investigation Containers
 
@@ -318,7 +333,7 @@ Files:
 - `custom_components/cozylife/sensor.py`
 
 Why it matters:
-- Public-facing polish depends on coherent entity modeling.
+- Public-facing polish depends on coherent entity modelling.
 
 ### 4. Device Coverage
 
@@ -363,10 +378,10 @@ Why it matters:
 
 The next investigation should not start with refactoring. It should produce verified truth in this order:
 
-1. Confirm actual supported device classes and remove ambiguity about switch-as-light behavior.
+1. Confirm actual supported device classes and remove ambiguity about switch-as-light behaviour.
 2. Trace the device protocol with one known working light and one known working switch.
 3. Define the target config-entry shape and list legacy shapes that still need migration support.
-4. Audit README claims against code and against observed behavior.
+4. Audit README claims against code and against observed behaviour.
 5. Add a minimal validation harness so future cleanup is evidence-based.
 
 ## Fast Reference
@@ -375,7 +390,11 @@ The next investigation should not start with refactoring. It should produce veri
 - Onboarding and options: `custom_components/cozylife/config_flow.py`
 - Local discovery: `custom_components/cozylife/discovery.py`
 - Hardware protocol: `custom_components/cozylife/tcp_client.py`
-- Light behavior: `custom_components/cozylife/light.py`
-- Switch behavior: `custom_components/cozylife/switch.py`
-- Sensor behavior: `custom_components/cozylife/sensor.py`
+- Light behaviour: `custom_components/cozylife/light.py`
+- Switch behaviour: `custom_components/cozylife/switch.py`
+- Sensor behaviour: `custom_components/cozylife/sensor.py`
 - Device catalogue: `custom_components/cozylife/model.json`
+
+## Repository knowledge
+
+- [Documentation map](docs/knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

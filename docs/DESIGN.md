@@ -1,6 +1,21 @@
+---
+type: "Design Concept"
+title: "Design"
+description: "Documents Design for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - design-concept
+navigation:
+  role: supporting
+  order: 100
+---
 # Design
 
-This repository should evolve toward a design that is boring in the right places and explicit in the uncertain places.
+This repository should evolve towards a design that is boring in the right places and explicit in the uncertain places.
 
 ## Design Goals
 
@@ -16,7 +31,7 @@ The repository currently combines:
 - a compact integration structure,
 - useful real-world protocol knowledge,
 - legacy compatibility paths,
-- uneven entity modeling,
+- uneven entity modelling,
 - limited verification evidence.
 
 That combination is acceptable for an internal project, but not yet sufficient for a public portfolio-quality integration.
@@ -29,12 +44,16 @@ The intended design should make it easy to answer these questions:
 - What Home Assistant entities do they create?
 - What protocol assumptions are verified?
 - What reliability guarantees are intended?
-- What is known debt versus accidental behavior?
+- What is known debt versus accidental behaviour?
 
 ## Design Standard
 
-Every major behavior should eventually have one home:
+Every major behaviour should eventually have one home:
 - architecture belongs in `ARCHITECTURE.md`,
 - principles belong in `docs/design-docs/`,
-- user-facing behavior belongs in `docs/product-specs/`,
+- user-facing behaviour belongs in `docs/product-specs/`,
 - active execution work belongs in `docs/exec-plans/`.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

@@ -14,7 +14,7 @@ Use [AGENTS.md](AGENTS.md) as the repo-specific operating guide. This file defin
 
 - open a pull request for every merge into `main`, including solo work
 - use draft pull requests for partial work and mark them ready only when the branch is reviewable
-- summarize the behavior change, validation performed, and docs touched
+- summarise the behaviour change, validation performed, and docs touched
 - prefer squash merge unless preserving multiple commits has durable review value
 - delete the merged or closed feature branch after the work is finished; never delete `main`
 
@@ -28,10 +28,10 @@ Use [AGENTS.md](AGENTS.md) as the repo-specific operating guide. This file defin
 ## Licensing
 
 - by contributing, you agree your changes are licensed under `Apache-2.0`
-- preserve copyright and license notices in forks and redistributions
+- preserve copyright and licence notices in forks and redistributions
 
 ## Verification
 
 - run the smallest relevant local test, lint, or build path before opening a pull request
-- when behavior changes, update tests and documentation in the same branch
+- when behaviour changes, update tests and documentation in the same branch
 - never commit secrets, machine-local credentials, or unredacted personal data

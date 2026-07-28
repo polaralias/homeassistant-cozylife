@@ -9,7 +9,7 @@ Date: `2026-05-19`
 - live device tested: redacted for public repository publication
 - live IP during test: redacted for public repository publication
 
-## Catalog Declaration
+## Catalogue Declaration
 
 `model.json` declares these DPIDs for `rju4K7`:
 
@@ -36,20 +36,20 @@ Date: `2026-05-19`
 - `5`: `7`
 - `6`: `1000`
 
-## Verified Live Behaviors
+## Verified Live Behaviours
 
 - direct TCP info response succeeded
 - direct TCP query response succeeded
 - on/off control succeeded
 - brightness control succeeded
-- color-temperature control succeeded
-- HS color control succeeded
+- colour-temperature control succeeded
+- HS colour control succeeded
 - `sleep` effect payload succeeded
 - `warm` effect payload succeeded
 - `study` effect payload succeeded
 - `chrismas` effect payload succeeded
 - brightness transition succeeded after transition-path repair
-- color-temperature transition succeeded after transition-path repair
+- colour-temperature transition succeeded after transition-path repair
 - HS transition succeeded after transition-path repair
 - original device state was restored and confirmed by query
 
@@ -65,7 +65,7 @@ This is the first live confirmation in this repository that DPID `7` and `8` are
 
 ## Remaining Parity Gaps
 
-The following catalog-declared DPIDs were not observed in live query responses during the full validation pass:
+The following catalogue-declared DPIDs were not observed in live query responses during the full validation pass:
 
 - `9`
 - `13`
@@ -75,6 +75,6 @@ The following catalog-declared DPIDs were not observed in live query responses d
 
 Current repository status for those DPIDs:
 
-- they are catalog-declared for `rju4K7`,
+- they are catalogue-declared for `rju4K7`,
 - they are not mapped to a first-class Home Assistant light capability in the current code,
 - their runtime semantics remain unverified in this repository.

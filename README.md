@@ -1,3 +1,18 @@
+---
+type: "Repository Guide"
+title: "CozyLife For Home Assistant"
+description: "Documents CozyLife For Home Assistant for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - repository-guide
+navigation:
+  role: entry-point
+  order: 10
+---
 <p align="center">
   <img src="CozyLife%20Banner.png" alt="CozyLife banner" width="960" />
 </p>
@@ -42,8 +57,8 @@ The integration scans for compatible CozyLife devices, connects to them locally,
 ## Support Notes
 
 - Lights are the current verified first-class device class.
-- Some switch and sensor behavior exists in the integration but is not yet validated to the same level across real hardware.
-- Upstream catalog presence does not automatically mean supported behavior in this repo.
+- Some switch and sensor behaviour exists in the integration but is not yet validated to the same level across real hardware.
+- Upstream catalogue presence does not automatically mean supported behaviour in this repo.
 
 ## Documentation
 
@@ -53,4 +68,8 @@ Start with:
 - [ARCHITECTURE.md](ARCHITECTURE.md)
 - [docs/RELIABILITY.md](docs/RELIABILITY.md)
 
-For repository workflow, evidence discipline, and agent-focused context, read [AGENTS.md](AGENTS.md).
+For repository workflow, evidence discipline, and agent-focussed context, read [AGENTS.md](AGENTS.md).
+
+## Repository knowledge
+
+- [Documentation map](docs/knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

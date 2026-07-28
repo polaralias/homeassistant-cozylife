@@ -1,39 +1,58 @@
+---
+type: "Repository Knowledge"
+title: "CI"
+description: "Documents CI for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - repository-knowledge
+navigation:
+  role: supporting
+  order: 100
+---
 # CI
 
 This document records the desired CI posture for the repository.
 
 ## Current State
 
-- the repository now has an observational GitHub Actions workflow for upstream catalog drift,
-- the repository contains a local `model.json` catalog snapshot whose upstream source is known.
+- the repository now has an observational GitHub Actions workflow for upstream catalogue drift,
+- the repository contains a local `model.json` catalogue snapshot whose upstream source is known.
 
-## Catalog Snapshot Requirement
+## Catalogue Snapshot Requirement
 
-`custom_components/cozylife/model.json` is a checked-in snapshot of the upstream Doiting model catalog:
+`custom_components/cozylife/model.json` is a checked-in snapshot of the upstream Doiting model catalogue:
 
 - [api-us.doiting.com/api/device_product/model?lang=en](https://api-us.doiting.com/api/device_product/model?lang=en)
 
-Desired CI behavior:
-- fetch the upstream catalog snapshot on a scheduled and/or manual basis,
+Desired CI behaviour:
+- fetch the upstream catalogue snapshot on a scheduled and/or manual basis,
 - diff the upstream response against the checked-in `model.json`,
 - surface the diff clearly for maintainers,
 - avoid silently rewriting the checked-in file on merge.
 
 ## Policy
 
-- upstream catalog drift should be visible,
-- upstream catalog drift should not automatically become a support claim,
-- CI may report or propose catalog updates,
-- catalog updates should remain deliberate repository changes.
+- upstream catalogue drift should be visible,
+- upstream catalogue drift should not automatically become a support claim,
+- CI may report or propose catalogue updates,
+- catalogue updates should remain deliberate repository changes.
 
 ## Why This Matters
 
 - the integration uses `model.json` for classification and capability inference,
-- upstream catalog changes can affect potentially supported surfaces,
+- upstream catalogue changes can affect potentially supported surfaces,
 - the repository should track upstream drift without pretending that upstream breadth equals maintained support.
 
 ## Future Work
 
-- keep the catalog-drift workflow observational unless repository policy changes,
+- keep the catalogue-drift workflow observational unless repository policy changes,
 - decide whether CI should fail on drift or only report it,
-- document any review process for accepting catalog snapshot updates.
+- document any review process for accepting catalogue snapshot updates.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

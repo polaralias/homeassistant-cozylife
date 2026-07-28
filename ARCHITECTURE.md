@@ -1,3 +1,18 @@
+---
+type: "Architecture Concept"
+title: "Architecture"
+description: "Documents Architecture for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - architecture-concept
+navigation:
+  role: foundational
+  order: 20
+---
 # Architecture
 
 This document describes the current architecture of the CozyLife Home Assistant integration and the desired direction for that architecture.
@@ -13,26 +28,26 @@ The target architecture is:
 - config-flow-first,
 - explicit about supported device classes,
 - resilient to DHCP and reconnect issues,
-- clear about which behaviors are verified on real hardware,
+- clear about which behaviours are verified on real hardware,
 - documented in terms of outcomes rather than implementation folklore.
 
 ## Current Runtime Shape
 
-The integration is organized around a thin Home Assistant orchestration layer and a synchronous device protocol layer.
+The integration is organised around a thin Home Assistant orchestration layer and a synchronous device protocol layer.
 
 Main modules:
-- `custom_components/cozylife/__init__.py`: config-entry setup, runtime normalization, platform forwarding, periodic rediscovery.
+- `custom_components/cozylife/__init__.py`: config-entry setup, runtime normalisation, platform forwarding, periodic rediscovery.
 - `custom_components/cozylife/config_flow.py`: onboarding flow, options flow, legacy compatibility for older entry shapes.
 - `custom_components/cozylife/discovery.py`: broadcast-assisted discovery and direct IP probing.
 - `custom_components/cozylife/tcp_client.py`: CozyLife TCP protocol client on port `5555`.
 - `custom_components/cozylife/light.py`: light entity logic and effect handling.
 - `custom_components/cozylife/switch.py`: switch entity logic.
 - `custom_components/cozylife/sensor.py`: raw sensor datapoint exposure through coordinators.
-- `custom_components/cozylife/model.json`: local catalog snapshot used to resolve `pid` to capabilities and labels.
+- `custom_components/cozylife/model.json`: local catalogue snapshot used to resolve `pid` to capabilities and labels.
 
 ## Runtime Data Model
 
-Each config entry is normalized into `hass.data[DOMAIN][entry_id]`.
+Each config entry is normalised into `hass.data[DOMAIN][entry_id]`.
 
 Observed runtime fields may include:
 - `device`
@@ -58,7 +73,7 @@ The code currently supports three config-entry shapes:
 The long-term direction should be one clear canonical shape with deliberate migration paths, but that is not the current state.
 
 Current migration contract:
-- legacy `location` values are canonicalized into `area`,
+- legacy `location` values are canonicalised into `area`,
 - top-level and multi-device list entries drop legacy `location` storage during migration,
 - legacy bucketed full-scan entries now migrate into canonical `devices` list rows plus `scan_settings`,
 - legacy options rescans now persist canonical `devices` list rows instead of rewriting bucketed device dictionaries,
@@ -81,19 +96,19 @@ This validates the architectural intent behind periodic rediscovery.
 
 The protocol boundary is `tcp_client.py`.
 
-Observed behavior:
+Observed behaviour:
 - sends JSON messages terminated by `\\r\\n`,
 - supports `info`, `query`, and `set` commands,
 - resolves device metadata through `model.json`,
-- waits for the matching top-level `sn` response and rejects explicit negative acknowledgments in automated tests.
+- waits for the matching top-level `sn` response and rejects explicit negative acknowledgements in automated tests.
 
-`model.json` should be treated as an internal catalog snapshot that widens the space of potentially supported devices. It is not a maintained support contract by itself.
+`model.json` should be treated as an internal catalogue snapshot that widens the space of potentially supported devices. It is not a maintained support contract by itself.
 
 Observed provenance on `2026-05-17`:
-- upstream catalog endpoint: [api-us.doiting.com/api/device_product/model?lang=en](https://api-us.doiting.com/api/device_product/model?lang=en)
+- upstream catalogue endpoint: [api-us.doiting.com/api/device_product/model?lang=en](https://api-us.doiting.com/api/device_product/model?lang=en)
 
 Repository truth rule:
-- live device behavior determines support status,
+- live device behaviour determines support status,
 - `model.json` provides the closest provider-level capability declaration,
 - mismatches between the two should be documented as parity gaps.
 
@@ -116,21 +131,21 @@ Current tested entity policy:
 - light-wrapped switch entities are no longer part of the repository contract.
 - active light `color_mode` now follows queried live state instead of constructor-time capability hints.
 
-Current onboarding behavior:
+Current onboarding behaviour:
 - config flow can create entries for discovered `light`, `switch`, `sensor`, and `unknown` devices,
 - only `light`, `switch`, and `sensor` currently have first-class Home Assistant platforms,
 - `unknown` devices can therefore be stored by config flow without gaining a default entity surface,
 - configured devices with explicit DIY DPID mappings can surface read-only custom sensor entities for those mapped DPIDs,
-- configured devices with explicit DIY write opt-in can also surface custom writable boolean switch entities for observed catalog-backed DPIDs,
-- DIY-mapped entities remain user-defined behavior rather than default supported product behavior.
+- configured devices with explicit DIY write opt-in can also surface custom writable boolean switch entities for observed catalogue-backed DPIDs,
+- DIY-mapped entities remain user-defined behaviour rather than default supported product behaviour.
 
 ## Architecture Principles
 
 - Local protocol truth should outrank historical README claims.
 - Canonical state shapes should outrank compatibility shims over time.
-- Verified behavior should be documented separately from desired behavior.
+- Verified behaviour should be documented separately from desired behaviour.
 - Hardware-specific quirks should be isolated, named, and justified.
-- Every public-facing capability claim should map to either verified behavior or an explicit target-state design doc.
+- Every public-facing capability claim should map to either verified behaviour or an explicit target-state design doc.
 
 ## Related Docs
 
@@ -144,3 +159,7 @@ Current onboarding behavior:
 - `docs/product-specs/index.md`
 - `CODEBASE_MAP.md`
 - `VERIFICATION_AUDIT.md`
+
+## Repository knowledge
+
+- [Documentation map](docs/knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

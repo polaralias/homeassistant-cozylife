@@ -1,3 +1,18 @@
+---
+type: "Design Concept"
+title: "Entity Surface Principles"
+description: "Documents Entity Surface Principles for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - design-concept
+navigation:
+  role: supporting
+  order: 100
+---
 # Entity Surface Principles
 
 ## Principle
@@ -22,3 +37,7 @@ The repository now enforces one entity-domain choice for switch-class devices:
 Before code cleanup, the repository should first define:
 - what a switch should be,
 - how sensors should be represented beyond raw datapoints.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

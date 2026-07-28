@@ -1,4 +1,4 @@
-# Model Catalog Summary
+# Model Catalogue Summary
 
 This file is derived from `custom_components/cozylife/model.json`.
 
@@ -6,7 +6,7 @@ It is a lightweight inventory reference, not a support claim.
 
 Generated from repository state observed on `2026-05-17`.
 
-Upstream source for the checked-in catalog snapshot:
+Upstream source for the checked-in catalogue snapshot:
 - [api-us.doiting.com/api/device_product/model?lang=en](https://api-us.doiting.com/api/device_product/model?lang=en)
 
 ## Top-Level Summary
@@ -17,7 +17,7 @@ Upstream source for the checked-in catalog snapshot:
 
 | Device Type Code | Model Count | Example Model |
 | --- | ---: | --- |
-| `01` | 492 | Color temperature lamp |
+| `01` | 492 | Colour temperature lamp |
 | `00` | 290 | Smart Switch |
 | `02` | 7 | Curtain |
 | `05` | 14 | Tea bar machine |
@@ -31,7 +31,7 @@ Upstream source for the checked-in catalog snapshot:
 
 ## Interpretation
 
-- The local catalog is much broader than the active Home Assistant entity surface.
+- The local catalogue is much broader than the active Home Assistant entity surface.
 - Presence in `model.json` should not be read as proof of repository support.
 - Presence in `model.json` may indicate a potentially supported surface, but not a verified or maintained one.
 - Current runtime support is narrower and should be documented separately in architecture and product-spec docs.
