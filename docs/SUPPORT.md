@@ -1,3 +1,18 @@
+---
+type: "Support Boundary"
+title: "Support"
+description: "Documents Support for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - support-boundary
+navigation:
+  role: supporting
+  order: 100
+---
 # Support
 
 This document is the canonical support policy for the repository.
@@ -120,3 +135,7 @@ If a physical device in a supported or potentially supported area fails in pract
 - `docs/product-specs/entity-surface.md`
 - `docs/product-specs/light-device-behavior.md`
 - `docs/generated/parity-gap-register.md`
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

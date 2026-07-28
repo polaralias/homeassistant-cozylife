@@ -1,3 +1,18 @@
+---
+type: "Design Concept"
+title: "Local-First Device Control"
+description: "Documents Local-First Device Control for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - design-concept
+navigation:
+  role: supporting
+  order: 100
+---
 # Local-First Device Control
 
 ## Principle
@@ -22,3 +37,7 @@ A user should be able to:
 
 - local discovery and reconnect behaviour are tier-one engineering concerns,
 - cloud behaviour should only appear in docs as contextual caution unless verified.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

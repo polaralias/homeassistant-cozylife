@@ -1,3 +1,18 @@
+---
+type: "Delivery Plan"
+title: "Tech Debt Tracker"
+description: "Documents Tech Debt Tracker for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - delivery-plan
+navigation:
+  role: supporting
+  order: 100
+---
 # Tech Debt Tracker
 
 This file tracks debt that should be made explicit before major code cleanup.
@@ -120,3 +135,7 @@ Desired state:
 
 Status:
 - started, not resolved.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

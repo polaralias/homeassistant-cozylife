@@ -1,3 +1,18 @@
+---
+type: "Delivery Plan"
+title: "Documentation Harness Plan"
+description: "Documents Documentation Harness Plan for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - delivery-plan
+navigation:
+  role: supporting
+  order: 100
+---
 # Documentation Harness Plan
 
 Status: Active
@@ -30,3 +45,7 @@ The harness must also make future implementation sessions intelligible from the 
 - future refactors can point at explicit desired outcomes,
 - archaeology outputs are clearly treated as dated evidence rather than permanent root-level canon,
 - a future agent given a light prompt can identify the canonical docs, the current support policy, and the next safe implementation seam.
+
+## Repository knowledge
+
+- [Documentation map](../../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

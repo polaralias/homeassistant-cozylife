@@ -1,0 +1,4 @@
+# Skill packages retain their own schema.
+skills/
+# Generated report must not consume itself.
+docs/visualizations/repository-okf.mermaid.md

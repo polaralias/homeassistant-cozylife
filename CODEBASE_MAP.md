@@ -1,3 +1,18 @@
+---
+type: "Architecture Concept"
+title: "CozyLife Codebase Map"
+description: "Documents CozyLife Codebase Map for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - architecture-concept
+navigation:
+  role: foundational
+  order: 20
+---
 # CozyLife Codebase Map
 
 This document maps the repository as it exists today.
@@ -379,3 +394,7 @@ The next investigation should not start with refactoring. It should produce veri
 - Switch behaviour: `custom_components/cozylife/switch.py`
 - Sensor behaviour: `custom_components/cozylife/sensor.py`
 - Device catalogue: `custom_components/cozylife/model.json`
+
+## Repository knowledge
+
+- [Documentation map](docs/knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

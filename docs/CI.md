@@ -1,3 +1,18 @@
+---
+type: "Repository Knowledge"
+title: "CI"
+description: "Documents CI for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - repository-knowledge
+navigation:
+  role: supporting
+  order: 100
+---
 # CI
 
 This document records the desired CI posture for the repository.
@@ -37,3 +52,7 @@ Desired CI behaviour:
 - keep the catalogue-drift workflow observational unless repository policy changes,
 - decide whether CI should fail on drift or only report it,
 - document any review process for accepting catalogue snapshot updates.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

@@ -1,3 +1,18 @@
+---
+type: "Repository Knowledge"
+title: "Product Sense"
+description: "Documents Product Sense for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - repository-knowledge
+navigation:
+  role: supporting
+  order: 100
+---
 # Product Sense
 
 This integration should be treated like a small product, not just a bag of protocol code.
@@ -26,3 +41,7 @@ The ideal user outcome is:
 - the current entity surface is not fully coherent,
 - runtime behaviour has been partially verified on a live light but not on switches or sensors,
 - the old README included claims that were stronger than current evidence.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

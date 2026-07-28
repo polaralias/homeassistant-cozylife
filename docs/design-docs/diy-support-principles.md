@@ -1,3 +1,18 @@
+---
+type: "Design Concept"
+title: "DIY Support Principles"
+description: "Documents DIY Support Principles for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - design-concept
+navigation:
+  role: supporting
+  order: 100
+---
 # DIY Support Principles
 
 ## Principle
@@ -81,3 +96,7 @@ The repository should prefer:
 1. user-defined raw sensor mappings for observed DPID values
 2. optional naming and grouping for those raw entities
 3. only later, carefully constrained write experiments if there is strong demand and clear semantics
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

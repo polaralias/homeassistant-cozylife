@@ -1,3 +1,18 @@
+---
+type: "Product Contract"
+title: "Light Device Behaviour"
+description: "Documents Light Device Behaviour for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - product-contract
+navigation:
+  role: foundational
+  order: 20
+---
 # Light Device Behaviour
 
 ## Desired Product Outcome
@@ -75,3 +90,7 @@ This closes the earlier mismatch where HS-capable lights could initialise in `hs
 What is still not hardware-verified:
 - some catalogue-declared light DPIDs for the verified PID,
 - longer-session behaviour beyond the current focussed live pass.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

@@ -1,3 +1,18 @@
+---
+type: "Design Concept"
+title: "Frontend"
+description: "Documents Frontend for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - design-concept
+navigation:
+  role: supporting
+  order: 100
+---
 # Frontend
 
 This repository does not currently contain a browser frontend in the usual application sense.
@@ -25,3 +40,7 @@ The effective frontend should be:
 See:
 - `docs/product-specs/new-user-onboarding.md`
 - `docs/product-specs/entity-surface.md`
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

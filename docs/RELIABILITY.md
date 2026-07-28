@@ -1,3 +1,18 @@
+---
+type: "Reliability Contract"
+title: "Reliability"
+description: "Documents Reliability for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - reliability-contract
+navigation:
+  role: supporting
+  order: 100
+---
 # Reliability
 
 This document defines the desired reliability posture for the CozyLife integration.
@@ -59,3 +74,7 @@ The repository's parity policy is also explicit:
 - verify behaviour after device IP changes,
 - verify behaviour after temporary loss of power or Wi-Fi,
 - verify polling behaviour over longer sessions.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

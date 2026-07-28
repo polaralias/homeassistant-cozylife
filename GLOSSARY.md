@@ -1,3 +1,18 @@
+---
+type: "Glossary Concept"
+title: "Glossary"
+description: "Documents Glossary for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - glossary-concept
+navigation:
+  role: foundational
+  order: 20
+---
 # Glossary
 
 This glossary defines the product-language and support-language used by this repository.
@@ -72,3 +87,7 @@ _Avoid_: supported sensor, verified sensor
 - `model.json` could be mistaken for a support declaration — resolved: it is a **Catalogue snapshot**
 - "supported" versus "partially supported" was underdefined — resolved: partial support means the device works on real hardware but not all expected controls for that class are verified working
 - Live capability truth and catalogue-declared capability truth could be conflated — resolved: live behaviour decides support status, and catalogue data defines the parity target and mismatch record
+
+## Repository knowledge
+
+- [Documentation map](docs/knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

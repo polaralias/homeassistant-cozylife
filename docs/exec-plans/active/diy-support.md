@@ -1,3 +1,18 @@
+---
+type: "Delivery Plan"
+title: "DIY Support Plan"
+description: "Documents DIY Support Plan for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - delivery-plan
+navigation:
+  role: supporting
+  order: 100
+---
 # DIY Support Plan
 
 Status: Active
@@ -35,3 +50,7 @@ Provide a safe custom-extension path for users with unsupported or partially und
 - generic writable number, select, or button synthesis
 - automatic promotion from DIY mapping into supported product behaviour
 - generic unknown-device entity synthesis without explicit user configuration
+
+## Repository knowledge
+
+- [Documentation map](../../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

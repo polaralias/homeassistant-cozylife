@@ -1,3 +1,18 @@
+---
+type: "Product Contract"
+title: "New User Onboarding"
+description: "Documents New User Onboarding for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - product-contract
+navigation:
+  role: foundational
+  order: 20
+---
 # New User Onboarding
 
 ## Desired User Outcome
@@ -32,3 +47,7 @@ A user should be able to install the integration and discover verified supported
 
 - lights are the only verified supported onboarding target,
 - switches and sensors may appear through existing code paths but are not yet supported or tested without contributor validation.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

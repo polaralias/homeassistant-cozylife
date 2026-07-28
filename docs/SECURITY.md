@@ -1,3 +1,18 @@
+---
+type: "Security Boundary"
+title: "Security"
+description: "Documents Security for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - security-boundary
+navigation:
+  role: foundational
+  order: 20
+---
 # Security
 
 This document records the current security posture and the desired end state.
@@ -36,3 +51,7 @@ The integration should be explicit about:
 - capture protocol exchanges and inspect any `res` semantics,
 - document the actual trust model once more live traffic is observed,
 - convert historical notes into verified statements or remove them.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

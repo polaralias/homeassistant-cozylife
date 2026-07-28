@@ -1,3 +1,18 @@
+---
+type: "Delivery Plan"
+title: "Readiness Rubric"
+description: "Documents Readiness Rubric for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - delivery-plan
+navigation:
+  role: supporting
+  order: 100
+---
 # Readiness Rubric
 
 This document replaces subjective quality scoring with explicit readiness conditions.
@@ -119,3 +134,7 @@ A new device class or model should not be promoted unless:
 - it has a parity register entry,
 - its entity surface is documented,
 - any gaps against `model.json` are recorded.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

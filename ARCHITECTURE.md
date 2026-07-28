@@ -1,3 +1,18 @@
+---
+type: "Architecture Concept"
+title: "Architecture"
+description: "Documents Architecture for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - architecture-concept
+navigation:
+  role: foundational
+  order: 20
+---
 # Architecture
 
 This document describes the current architecture of the CozyLife Home Assistant integration and the desired direction for that architecture.
@@ -144,3 +159,7 @@ Current onboarding behaviour:
 - `docs/product-specs/index.md`
 - `CODEBASE_MAP.md`
 - `VERIFICATION_AUDIT.md`
+
+## Repository knowledge
+
+- [Documentation map](docs/knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

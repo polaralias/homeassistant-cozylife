@@ -1,3 +1,18 @@
+---
+type: "Delivery Plan"
+title: "Plans"
+description: "Documents Plans for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - delivery-plan
+navigation:
+  role: supporting
+  order: 100
+---
 # Plans
 
 This file is the navigation entry point for active engineering and documentation work.
@@ -40,3 +55,7 @@ Current execution stance:
 - `docs/generated/tested-but-not-confirmed-capabilities.md`
 
 These are dated evidence artefacts. They are useful inputs to the canonical docs, but they are not the long-term public documentation surface.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

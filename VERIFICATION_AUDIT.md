@@ -1,3 +1,18 @@
+---
+type: "Validation Evidence"
+title: "CozyLife Verification Audit"
+description: "Documents CozyLife Verification Audit for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: verified-limited
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - validation-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # CozyLife Verification Audit
 
 This document is the second pass after `CODEBASE_MAP.md`.
@@ -313,3 +328,7 @@ Expected output of that session:
 - a truth table of device type -> HA entities,
 - a minimal protocol transcript,
 - a list of README claims that can be retained versus removed.
+
+## Repository knowledge
+
+- [Documentation map](docs/knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

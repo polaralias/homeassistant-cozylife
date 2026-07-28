@@ -1,3 +1,18 @@
+---
+type: "Design Concept"
+title: "Design"
+description: "Documents Design for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - design-concept
+navigation:
+  role: supporting
+  order: 100
+---
 # Design
 
 This repository should evolve towards a design that is boring in the right places and explicit in the uncertain places.
@@ -38,3 +53,7 @@ Every major behaviour should eventually have one home:
 - principles belong in `docs/design-docs/`,
 - user-facing behaviour belongs in `docs/product-specs/`,
 - active execution work belongs in `docs/exec-plans/`.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

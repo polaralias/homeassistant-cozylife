@@ -1,3 +1,18 @@
+---
+type: "Product Contract"
+title: "DIY Support"
+description: "Documents DIY Support for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - product-contract
+navigation:
+  role: foundational
+  order: 20
+---
 # DIY Support
 
 ## Desired Product Outcome
@@ -72,3 +87,7 @@ Still open:
 - whether DIY configuration should stay in the options flow long term or move to a more guided UI,
 - whether the writable DIY surface should remain capped at boolean switches,
 - whether any future custom entity types can be added without weakening the repository support contract.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

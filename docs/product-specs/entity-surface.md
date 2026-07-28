@@ -1,3 +1,18 @@
+---
+type: "Product Contract"
+title: "Entity Surface"
+description: "Documents Entity Surface for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - product-contract
+navigation:
+  role: foundational
+  order: 20
+---
 # Entity Surface
 
 ## Desired Product Outcome
@@ -59,3 +74,7 @@ Capability-parity policy:
 Until then:
 - lights are supported,
 - switches and sensors remain potentially supported available code paths open to contributor-led validation.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

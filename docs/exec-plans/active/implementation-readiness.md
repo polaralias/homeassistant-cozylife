@@ -1,3 +1,18 @@
+---
+type: "Delivery Plan"
+title: "Implementation Readiness"
+description: "Documents Implementation Readiness for the homeassistant-cozylife repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - homeassistant-cozylife
+  - delivery-plan
+navigation:
+  role: supporting
+  order: 100
+---
 # Implementation Readiness
 
 Status: Active
@@ -96,3 +111,7 @@ This repository is implementation-ready when a new agent can:
 - add or use a minimal automated test for that public behaviour,
 - make the smallest code change that satisfies the test and the documented contract,
 - update the canonical docs only where the behaviour contract changed or was newly verified.
+
+## Repository knowledge
+
+- [Documentation map](../../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.
