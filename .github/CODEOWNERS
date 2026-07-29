@@ -1,0 +1,5 @@
+# Default ownership for review requests.
+* @polaralias
+
+# Changes to ownership policy require the same owner to review them.
+/.github/CODEOWNERS @polaralias
