@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 6,
+  "revision": 7,
   "knowledge": [
     {
       "path": "docs/PLANS.md",
@@ -10,12 +10,12 @@
         "docs/exec-plans/active/tcp-live-hardware-validation.md"
       ],
       "verified": {
-        "verifiedAt": "2026-10-08T19:50:24.569Z",
-        "evidence": "Reviewed release version metadata against the tag-validation workflow and linked the existing TCP validation plan into the repository graph. The plan remains pending for the contributor installation; no new live-control claim.",
+        "verifiedAt": "2026-10-08T20:51:39.018Z",
+        "evidence": "Reviewed existing flow translation changes and matching manifest release version. Locale cache regression tests already pass. GitHub checks will validate updated PRs before merge; release tag provides HACS remote version.",
         "sourceIdentities": [
           {
             "path": "custom_components/cozylife/manifest.json",
-            "sha256": "e9c1d8f01c98e435402aedda4c79f249db258f4d0655fb15fdd3190f2caab739"
+            "sha256": "c86ecc6e75f12c35373e6319fe53b04aeefffa4d2a4cf80e4e5811ddac500f7e"
           },
           {
             "path": "docs/exec-plans/active/tcp-live-hardware-validation.md",
@@ -27,7 +27,7 @@
           },
           {
             "path": "hacs.json",
-            "sha256": "12983fc9644bbdf7da6c1ef6c9f853990dbfcc652f7ff3fe775ee9ef96a72419"
+            "sha256": "05949b0754a65985e2740f57e1ac401d36d72368ae9c3170244707bab3155ca0"
           }
         ]
       }
@@ -41,8 +41,8 @@
         "custom_components/cozylife/config_flow.py"
       ],
       "verified": {
-        "verifiedAt": "2026-10-08T20:14:35.101Z",
-        "evidence": "Reviewed packaged translation keys and flow emission; actual HA en/en-GB cache tests pass. Live UI and dynamic-form limits are documented.",
+        "verifiedAt": "2026-10-08T20:51:38.900Z",
+        "evidence": "Reviewed existing flow translation changes and matching manifest release version. Locale cache regression tests already pass. GitHub checks will validate updated PRs before merge; release tag provides HACS remote version.",
         "sourceIdentities": [
           {
             "path": "custom_components/cozylife/config_flow.py",
