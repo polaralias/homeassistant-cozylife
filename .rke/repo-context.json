@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "revision": 2,
+  "knowledge": [
+    {
+      "path": "docs/PLANS.md",
+      "sources": [
+        "custom_components/cozylife/manifest.json",
+        "hacs.json",
+        "docs/exec-plans/active/tcp-live-hardware-validation.md"
+      ],
+      "verified": {
+        "verifiedAt": "2026-10-08T19:50:24.569Z",
+        "evidence": "Reviewed release version metadata against the tag-validation workflow and linked the existing TCP validation plan into the repository graph. The plan remains pending for the contributor installation; no new live-control claim.",
+        "sourceIdentities": [
+          {
+            "path": "custom_components/cozylife/manifest.json",
+            "sha256": "e9c1d8f01c98e435402aedda4c79f249db258f4d0655fb15fdd3190f2caab739"
+          },
+          {
+            "path": "docs/exec-plans/active/tcp-live-hardware-validation.md",
+            "sha256": "6a2db30f6e02a7d975d29add6f355d5142b7604d7bb5b7ea6d3e96ca1a292b8b"
+          },
+          {
+            "path": "docs/PLANS.md",
+            "sha256": "75a39a532d0552151a8b1790ab60b8aa642967925d1beeab1b86a5d644704eb4"
+          },
+          {
+            "path": "hacs.json",
+            "sha256": "12983fc9644bbdf7da6c1ef6c9f853990dbfcc652f7ff3fe775ee9ef96a72419"
+          }
+        ]
+      }
+    }
+  ]
+}
