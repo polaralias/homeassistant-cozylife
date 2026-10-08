@@ -48,6 +48,13 @@ A user should be able to install the integration and discover verified supported
 - lights are the only verified supported onboarding target,
 - switches and sensors may appear through existing code paths but are not yet supported or tested without contributor validation.
 
+## Form localisation
+
+- The installed component must package `translations/en.json`; `strings.json` alone does not provide custom-integration runtime labels.
+- English and British English (`en-GB`) must display readable setup and options labels, errors, and abort reasons through Home Assistant's English fallback.
+- The initial form describes the detected ranges supplied by the flow rather than a fixed subnet.
+- Verification on 2026-10-08: automated tests load the packaged resources through Home Assistant's translation cache for both locales. The user's running frontend has not yet been rechecked after installation.
+
 ## Repository knowledge
 
 - [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

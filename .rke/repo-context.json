@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 2,
+  "revision": 6,
   "knowledge": [
     {
       "path": "docs/PLANS.md",
@@ -28,6 +28,41 @@
           {
             "path": "hacs.json",
             "sha256": "12983fc9644bbdf7da6c1ef6c9f853990dbfcc652f7ff3fe775ee9ef96a72419"
+          }
+        ]
+      }
+    },
+    {
+      "path": "docs/product-specs/new-user-onboarding.md",
+      "sources": [
+        "custom_components/cozylife/strings.json",
+        "custom_components/cozylife/translations/en.json",
+        "tests/test_translations.py",
+        "custom_components/cozylife/config_flow.py"
+      ],
+      "verified": {
+        "verifiedAt": "2026-10-08T20:14:35.101Z",
+        "evidence": "Reviewed packaged translation keys and flow emission; actual HA en/en-GB cache tests pass. Live UI and dynamic-form limits are documented.",
+        "sourceIdentities": [
+          {
+            "path": "custom_components/cozylife/config_flow.py",
+            "sha256": "154160b07048a8cb10045c1249eb4de9ca03091bd41d2af155b240ce71131e44"
+          },
+          {
+            "path": "custom_components/cozylife/strings.json",
+            "sha256": "56ce3067688d36cb333cb8a3bb1059e977bba935f4f27b1862575298f364ce2f"
+          },
+          {
+            "path": "custom_components/cozylife/translations/en.json",
+            "sha256": "56ce3067688d36cb333cb8a3bb1059e977bba935f4f27b1862575298f364ce2f"
+          },
+          {
+            "path": "docs/product-specs/new-user-onboarding.md",
+            "sha256": "37cf139c8aa14fa98b23d202fa6c5f4bfecd017649dcef786f17db714a1e0399"
+          },
+          {
+            "path": "tests/test_translations.py",
+            "sha256": "fd25e4148fc420cfeecc286887a1322e38a815ecd83dba03db6a6ccda7a2397b"
           }
         ]
       }
