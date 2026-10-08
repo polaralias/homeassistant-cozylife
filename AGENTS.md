@@ -74,8 +74,11 @@ Treat `CODEBASE_MAP.md` and `VERIFICATION_AUDIT.md` as dated evidence artefacts,
 - Keep generated or machine-derived reference output isolated under `docs/generated/`.
 - Keep active planning and debt tracking isolated under `docs/exec-plans/`.
 
-## Shared Git Workflow
+## Active Codex Handoff
 
+The current focused reliability work is documented in `docs/CODEX_HANDOFF.md`. Read that file before continuing the CozyLife TCP fix. It records the production-system boundary, the deferred indicator-mode work, the current branch/PR, validated commands, and the remaining live-testing steps.
+
+## Shared Git Workflow
 - work from a short-lived branch created from `main`
 - do not commit directly to `main`
 - use branch names prefixed with `feat/`, `fix/`, `docs/`, `chore/`, `refactor/`, or `test/`
