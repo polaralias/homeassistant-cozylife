@@ -42,6 +42,7 @@ Current execution stance:
 
 ## Active Plan References
 
+- [TCP live hardware validation](exec-plans/active/tcp-live-hardware-validation.md)
 - `docs/exec-plans/active/documentation-harness.md`
 - `docs/exec-plans/active/implementation-readiness.md`
 - `docs/exec-plans/active/diy-support.md`
