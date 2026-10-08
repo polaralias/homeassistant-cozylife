@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 2,
+  "revision": 7,
   "knowledge": [
     {
       "path": "docs/PLANS.md",
@@ -10,12 +10,12 @@
         "docs/exec-plans/active/tcp-live-hardware-validation.md"
       ],
       "verified": {
-        "verifiedAt": "2026-10-08T19:50:24.569Z",
-        "evidence": "Reviewed release version metadata against the tag-validation workflow and linked the existing TCP validation plan into the repository graph. The plan remains pending for the contributor installation; no new live-control claim.",
+        "verifiedAt": "2026-10-08T20:51:39.018Z",
+        "evidence": "Reviewed existing flow translation changes and matching manifest release version. Locale cache regression tests already pass. GitHub checks will validate updated PRs before merge; release tag provides HACS remote version.",
         "sourceIdentities": [
           {
             "path": "custom_components/cozylife/manifest.json",
-            "sha256": "e9c1d8f01c98e435402aedda4c79f249db258f4d0655fb15fdd3190f2caab739"
+            "sha256": "c86ecc6e75f12c35373e6319fe53b04aeefffa4d2a4cf80e4e5811ddac500f7e"
           },
           {
             "path": "docs/exec-plans/active/tcp-live-hardware-validation.md",
@@ -27,7 +27,42 @@
           },
           {
             "path": "hacs.json",
-            "sha256": "12983fc9644bbdf7da6c1ef6c9f853990dbfcc652f7ff3fe775ee9ef96a72419"
+            "sha256": "05949b0754a65985e2740f57e1ac401d36d72368ae9c3170244707bab3155ca0"
+          }
+        ]
+      }
+    },
+    {
+      "path": "docs/product-specs/new-user-onboarding.md",
+      "sources": [
+        "custom_components/cozylife/strings.json",
+        "custom_components/cozylife/translations/en.json",
+        "tests/test_translations.py",
+        "custom_components/cozylife/config_flow.py"
+      ],
+      "verified": {
+        "verifiedAt": "2026-10-08T20:51:38.900Z",
+        "evidence": "Reviewed existing flow translation changes and matching manifest release version. Locale cache regression tests already pass. GitHub checks will validate updated PRs before merge; release tag provides HACS remote version.",
+        "sourceIdentities": [
+          {
+            "path": "custom_components/cozylife/config_flow.py",
+            "sha256": "154160b07048a8cb10045c1249eb4de9ca03091bd41d2af155b240ce71131e44"
+          },
+          {
+            "path": "custom_components/cozylife/strings.json",
+            "sha256": "56ce3067688d36cb333cb8a3bb1059e977bba935f4f27b1862575298f364ce2f"
+          },
+          {
+            "path": "custom_components/cozylife/translations/en.json",
+            "sha256": "56ce3067688d36cb333cb8a3bb1059e977bba935f4f27b1862575298f364ce2f"
+          },
+          {
+            "path": "docs/product-specs/new-user-onboarding.md",
+            "sha256": "37cf139c8aa14fa98b23d202fa6c5f4bfecd017649dcef786f17db714a1e0399"
+          },
+          {
+            "path": "tests/test_translations.py",
+            "sha256": "fd25e4148fc420cfeecc286887a1322e38a815ecd83dba03db6a6ccda7a2397b"
           }
         ]
       }
